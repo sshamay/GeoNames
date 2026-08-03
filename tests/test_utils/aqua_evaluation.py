@@ -15,6 +15,58 @@ except ImportError:
 EXPECTED_OUTCOME_SEMANTIC_THRESHOLD = 0.85
 
 
+def extract_assistant_output(result):
+    """
+    Extract the reply text from an assistant call result.
+
+    Phase 1: assistant returns (response, trace_logs) tuple
+    Phase 2: assistant returns just response string
+
+    This helper makes the harness compatible with both phases.
+    """
+    return result[0] if isinstance(result, tuple) else result
+
+
+def failure_summary(eval_result):
+    """
+    Compact one-line reason for the pytest short summary (the first line of the
+    assertion message is the only text pytest shows next to 'FAILED').
+    """
+    failed = [
+        f"{check.get('check_name')} FAILED ({check.get('reason') or 'no reason'})"
+        for check in eval_result.get("details") or []
+        if check.get("status") == "FAILED"
+    ]
+    if failed:
+        return "; ".join(failed)
+    action = eval_result.get("action")
+    score = eval_result.get("aggregate_score")
+    score_text = f"{score:.3f}" if isinstance(score, (int, float)) else str(score)
+    return f"action={action} aggregate_score={score_text}"
+
+
+def format_eval_result(eval_result):
+    """
+    Render an AQuA eval result as compact multi-line text focused on the
+    failing checks. The first line of the assertion message is the pytest
+    short-summary reason; the rest is per-check status + aggregate + AI output.
+    """
+    if not isinstance(eval_result, dict):
+        return str(eval_result)
+
+    score = eval_result.get("aggregate_score")
+    score_text = f"{score:.3f}" if isinstance(score, (int, float)) else str(score)
+
+    lines = []
+    for check in eval_result.get("details") or []:
+        status = check.get("status")
+        reason = check.get("reason") or ""
+        lines.append(f"  {check.get('check_name')}: {status}{' - ' + reason if reason else ''}")
+
+    lines.append(f"  aggregate_score: {score_text} -> {eval_result.get('action')}")
+    return "\n".join(lines)
+
+
 def _normalize(text):
     return " ".join(text.lower().split())
 
@@ -72,6 +124,12 @@ class AQuAEvaluators:
     A modular evaluation engine based on the AQuA framework.
     It generically maps Golden Anchor requirements to specific quality gates [7].
     """
+
+    # Pluggable project hook: callable(ai_output, tool_outputs) -> list[str] of
+    # number-claim mismatches between the reply and the raw fetched data. The
+    # hallucination gate (evaluate_hallucination_consistency) only runs when a
+    # project registers one. None keeps the framework portable.
+    hallucination_extractor = None
 
     @staticmethod
     def evaluate_execution_path(trace_logs, required_documents):
@@ -274,6 +332,50 @@ class AQuAEvaluators:
             return {"check_name": "expected_outcome", "status": "FAILED", "score": 0.0,
                     "reason": f"Semantic similarity {similarity:.3f} below threshold {EXPECTED_OUTCOME_SEMANTIC_THRESHOLD}."}
 
+    @staticmethod
+    def evaluate_hallucination_consistency(ai_output, trace_logs):
+        """
+        Generic gate: numbers in the reply must match the raw fetched data.
+
+        Uses the project-registered ``hallucination_extractor`` to enumerate
+        mismatches (e.g. an earthquake count or strongest magnitude that does
+        not appear in ``tool_outputs``). Skipped by run_case when no extractor
+        is configured or nothing was fetched.
+        """
+        extractor = AQuAEvaluators.hallucination_extractor
+        mismatches = extractor(ai_output, (trace_logs or {}).get("tool_outputs") or {})
+        if mismatches:
+            return {
+                "check_name": "hallucination_check",
+                "status": "FAILED",
+                "score": 0.0,
+                "reason": "Reply numbers contradict fetched data: " + "; ".join(mismatches),
+            }
+        return {"check_name": "hallucination_check", "status": "PASSED", "score": 1.0}
+
+    @classmethod
+    def compute_metrics(cls, case, ai_output, trace_logs):
+        """
+        Per-case bool-or-None KPI metrics for the AQuA run ledger.
+
+        - ``intent_accurate``: executed tools exactly match required_tools.
+          None when the case declares no tools (excluded from the rate).
+        - ``hallucinated``: the reply contradicts the fetched data. None when
+          nothing was fetched (nothing to compare against).
+        """
+        required = [
+            t.get("name", t) if isinstance(t, dict) else t
+            for t in (case.get("required_tools") or [])
+        ]
+        actual = set((trace_logs or {}).get("executed_tools") or [])
+        intent = None if not required else actual == set(required)
+
+        outputs = (trace_logs or {}).get("tool_outputs") or {}
+        hallucinated = None
+        if outputs and cls.hallucination_extractor is not None:
+            hallucinated = bool(cls.hallucination_extractor(ai_output, outputs))
+        return {"intent_accurate": intent, "hallucinated": hallucinated}
+
     @classmethod
     def run_case(cls, case, ai_output, trace_logs):
         """
@@ -287,6 +389,9 @@ class AQuAEvaluators:
         the structured output is additionally validated against it. Projects
         without a structured contract can omit response_model and this check
         is skipped entirely.
+
+        Returns the confidence dict plus per-case KPI ``metrics`` (computed by
+        :meth:`compute_metrics`).
         """
         results = []
 
@@ -318,8 +423,16 @@ class AQuAEvaluators:
         if "expected_outcome" in case:
             results.append(cls.evaluate_expected_outcome(content, case.get("expected_outcome")))
 
-        # 5. Final Risk-Based Confidence Gate
-        return cls.calculate_confidence(results, case.get("threshold", 0.90))
+        # 5. Check Hallucination Consistency (reply numbers vs fetched data).
+        # Runs on every case that fetched data, when the project registered a
+        # hallucination_extractor.
+        if cls.hallucination_extractor is not None and (trace_logs or {}).get("tool_outputs"):
+            results.append(cls.evaluate_hallucination_consistency(ai_output, trace_logs))
+
+        # 6. Final Risk-Based Confidence Gate
+        result = cls.calculate_confidence(results, case.get("threshold", 0.90))
+        result["metrics"] = cls.compute_metrics(case, ai_output, trace_logs)
+        return result
 
     @staticmethod
     def calculate_confidence(results, threshold):

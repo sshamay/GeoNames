@@ -16,59 +16,13 @@ To use in another project:
 
 import pytest
 
+from test_utils.aqua_evaluation import (
+    extract_assistant_output,
+    failure_summary,
+    format_eval_result,
+)
+
 pytestmark = pytest.mark.ai_assistant
-
-
-def _extract_response(result):
-    """
-    Extract response from assistant return value.
-    
-    Phase 1: assistant returns (response, trace_logs) tuple
-    Phase 2: assistant returns just response string
-    
-    This helper makes test compatible with both phases.
-    """
-    return result[0] if isinstance(result, tuple) else result
-
-
-def _failure_summary(eval_result):
-    """
-    Compact one-line reason for the pytest short summary (the first line of the
-    assertion message is the only text pytest shows next to 'FAILED').
-    """
-    failed = [
-        f"{check.get('check_name')} FAILED ({check.get('reason') or 'no reason'})"
-        for check in eval_result.get("details") or []
-        if check.get("status") == "FAILED"
-    ]
-    if failed:
-        return "; ".join(failed)
-    action = eval_result.get("action")
-    score = eval_result.get("aggregate_score")
-    score_text = f"{score:.3f}" if isinstance(score, (int, float)) else str(score)
-    return f"action={action} aggregate_score={score_text}"
-
-
-def _format_eval_result(eval_result):
-    """
-    Render an AQuA eval result as compact multi-line text focused on the
-    failing checks. The first line of the assertion message is the pytest
-    short-summary reason; the rest is per-check status + aggregate + AI output.
-    """
-    if not isinstance(eval_result, dict):
-        return str(eval_result)
-
-    score = eval_result.get("aggregate_score")
-    score_text = f"{score:.3f}" if isinstance(score, (int, float)) else str(score)
-
-    lines = []
-    for check in eval_result.get("details") or []:
-        status = check.get("status")
-        reason = check.get("reason") or ""
-        lines.append(f"  {check.get('check_name')}: {status}{' - ' + reason if reason else ''}")
-
-    lines.append(f"  aggregate_score: {score_text} -> {eval_result.get('action')}")
-    return "\n".join(lines)
 
 
 def test_golden_anchor_case(ai_assistant, aqua_evaluators_class, run_ledger, case_and_id):
@@ -95,17 +49,30 @@ def test_golden_anchor_case(ai_assistant, aqua_evaluators_class, run_ledger, cas
     result = ai_assistant.process_user_query(user_input)
     
     # Extract response (works for both tuple and string)
-    ai_output = _extract_response(result)
+    ai_output = extract_assistant_output(result)
     
     # Extract trace logs from assistant's trace_collector
     # Works identically in Phase 1 and Phase 2
     trace_logs = ai_assistant.trace_collector.get_trace_logs()
     
-    # Run AQuA evaluators
+    # Generic harness feature: a case may declare simulated_output, the reply
+    # the assistant is assumed to have produced (e.g. a hallucination-demo case
+    # fabricates a number so the hallucination gate proves it is detected).
+    if case.get("simulated_output"):
+        ai_output = case["simulated_output"]
+    
+    # Run AQuA evaluators (includes the hallucination gate + KPI metrics)
     eval_result = aqua_evaluators_class.run_case(case, ai_output, trace_logs)
     
-    # Record the run outcome for KPI reporting (before assertion so failures log too)
-    run_ledger.record(case_id=case_id, case=case, eval_result=eval_result, ai_output=ai_output)
+    # Record the run outcome for KPI reporting (before assertion so failing
+    # cases are captured too). Per-case KPI metrics come from the evaluator.
+    run_ledger.record(
+        case_id=case_id,
+        case=case,
+        eval_result=eval_result,
+        ai_output=ai_output,
+        metrics=eval_result.get("metrics"),
+    )
     
     assert isinstance(eval_result, dict), f"Result for {case_id} is not a dict"
     
@@ -122,7 +89,7 @@ def test_golden_anchor_case(ai_assistant, aqua_evaluators_class, run_ledger, cas
     # nothing to introspect (it would otherwise dump the whole eval_result dict).
     is_safe = eval_result.get("is_safe") is True
     assert is_safe, (
-        f"Golden anchor case {case_id} failed evaluation: {_failure_summary(eval_result)}\n"
-        f"{_format_eval_result(eval_result)}\n"
+        f"Golden anchor case {case_id} failed evaluation: {failure_summary(eval_result)}\n"
+        f"{format_eval_result(eval_result)}\n"
         f"  AI output: {ai_output}"
     )

@@ -53,6 +53,8 @@ class AQuARunLedger:
         self.entries = []
         self.pytest_counts = {"passed": 0, "failed": 0, "skipped": 0, "errors": 0}
         self.pytest_failed_nodeids = []
+        self.deterministic_count = 0
+        self.probabilistic_count = 0
         self.started_at = _utc_now()
         self.started_epoch = time.time()
         self.duration_seconds = 0.0
@@ -60,8 +62,13 @@ class AQuARunLedger:
         self.git_commit = _git_commit()
 
     # ------------------------------------------------------------------ record
-    def record(self, case_id, case, eval_result, ai_output=None):
-        """Store one evaluated case. Returns the normalized entry dict."""
+    def record(self, case_id, case, eval_result, ai_output=None, metrics=None):
+        """Store one evaluated case. Returns the normalized entry dict.
+
+        ``metrics`` is an optional dict of bool-or-None project KPIs per case
+        (e.g. ``{"intent_accurate": True, "hallucinated": False}``). None means
+        the metric was not applicable and is excluded from its rate.
+        """
         checks = eval_result.get("details") or []
         entry = {
             "case_id": case_id,
@@ -75,6 +82,7 @@ class AQuARunLedger:
             "failing_checks": [c["check_name"] for c in checks if c.get("status") == "FAILED"],
             "skipped_checks": [c["check_name"] for c in checks if c.get("status") == "SKIPPED"],
             "checks": checks,
+            "metrics": dict(metrics or {}),
         }
         if ai_output is not None:
             entry["ai_output"] = ai_output
@@ -87,6 +95,13 @@ class AQuARunLedger:
             self.pytest_counts[outcome] += 1
         if outcome == "failed":
             self.pytest_failed_nodeids.append(nodeid)
+
+    def note_determinism(self, is_deterministic):
+        """Classify one test as deterministic (offline) or probabilistic (live)."""
+        if is_deterministic:
+            self.deterministic_count += 1
+        else:
+            self.probabilistic_count += 1
 
     # ------------------------------------------------------------- KPI math
     def build_kpis(self):
@@ -137,11 +152,39 @@ class AQuARunLedger:
 
         totals["evaluated"] = totals["passed"] + totals["failed"]
         evaluated = totals["evaluated"]
+        hitl_count = sum(1 for e in self.entries if e.get("action") == "ESCALATE_TO_HITL")
+        totals["hitl"] = hitl_count
+
+        # Bool-or-None project KPIs recorded per case (None = not applicable).
+        metric_rates = {}
+        for name in ("intent_accurate", "hallucinated"):
+            applicable = [e for e in self.entries if e.get("metrics", {}).get(name) is not None]
+            positive = [e for e in applicable if e["metrics"][name] is True]
+            metric_rates[name] = {
+                "evaluated": len(applicable),
+                "positive": len(positive),
+                "negative": len(applicable) - len(positive),
+                "rate": (len(positive) / len(applicable)) if applicable else None,
+            }
+
+        trust_total = self.deterministic_count + self.probabilistic_count
 
         return {
             "totals": totals,
             "pass_rate": totals["passed"] / evaluated if evaluated else None,
             "escape_rate": totals["failed"] / evaluated if evaluated else None,
+            "intent_accuracy": metric_rates["intent_accurate"],
+            "hallucination_rate": metric_rates["hallucinated"],
+            "sent_to_hitl": {
+                "count": hitl_count,
+                "rate": (hitl_count / evaluated) if evaluated else None,
+            },
+            "automation_trust_signal": {
+                "deterministic": self.deterministic_count,
+                "probabilistic": self.probabilistic_count,
+                "total": trust_total,
+                "rate": (self.deterministic_count / trust_total) if trust_total else None,
+            },
             "aggregate_confidence": {
                 "mean": (sum(scores) / len(scores)) if scores else None,
                 "min": min(scores) if scores else None,
@@ -176,6 +219,8 @@ class AQuARunLedger:
             "kpis": self.build_kpis(),
             "pytest_suite": {
                 **self.pytest_counts,
+                "deterministic_tests": self.deterministic_count,
+                "probabilistic_tests": self.probabilistic_count,
                 "failed_nodeids": self.pytest_failed_nodeids,
             },
             "entries": self.entries,

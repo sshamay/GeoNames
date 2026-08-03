@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AQuA Golden Anchor Dashboard</title>
+<style>
+  :root { --bg:#0f172a; --card:#1e293b; --line:#334155; --text:#e2e8f0;
+          --muted:#94a3b8; --green:#4ade80; --red:#f87171; --amber:#fbbf24; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+         background:var(--bg); color:var(--text); }
+  header { padding:20px 28px; border-bottom:1px solid var(--line); }
+  header h1 { margin:0; font-size:20px; }
+  header .meta { color:var(--muted); font-size:13px; margin-top:4px; }
+  main { padding:20px 28px; max-width:1200px; margin:0 auto; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:22px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
+  .card .value { font-size:26px; font-weight:700; }
+  .card .label { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.05em; }
+  .green { color:var(--green); } .red { color:var(--red); } .amber { color:var(--amber); }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  @media (max-width:900px) { .grid2 { grid-template-columns:1fr; } }
+  .layout { display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:18px; align-items:start; }
+  .sidebar { position:sticky; top:16px; }
+  @media (max-width:1100px) { .layout { grid-template-columns:1fr; } .sidebar { position:static; } }
+  .panel { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; margin-bottom:18px; }
+  .panel h2 { margin:0 0 12px; font-size:15px; color:var(--text); }
+  .sidebar dl { margin:0; }
+  .sidebar dt { font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:#7dd3fc; margin:14px 0 3px; }
+  .sidebar dt:first-child { margin-top:0; }
+  .sidebar dd { margin:0 0 2px; font-size:12px; line-height:1.45; color:var(--muted); }
+  .chartbox { position:relative; width:100%; }
+  .chartbox svg { display:block; max-width:100%; height:auto; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th, td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.05em; }
+  .pill { display:inline-block; padding:2px 8px; border-radius:99px; font-size:11px; font-weight:600; }
+  .pill.fail { background:rgba(248,113,113,.15); color:var(--red); }
+  .pill.pass { background:rgba(74,222,128,.15); color:var(--green); }
+  code { background:rgba(148,163,184,.12); padding:1px 5px; border-radius:4px; font-size:12px; }
+  .muted { color:var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <h1>AQuA Golden Anchor Dashboard</h1>
+  <div class="meta" id="meta"></div>
+</header>
+<main>
+  <div class="layout">
+    <div class="content">
+  <div class="cards" id="cards"></div>
+
+  <div class="grid2">
+    <div class="panel"><h2>Per-check pass rate (latest run)</h2>
+      <div class="chartbox"><svg viewBox="0 0 300 280" xmlns="http://www.w3.org/2000/svg"><line x1="44" y1="234.0" x2="292" y2="234.0" stroke="#334155" stroke-width="1"/><text x="38" y="238.0" fill="#94a3b8" font-size="10" text-anchor="end">0%</text><line x1="44" y1="181.0" x2="292" y2="181.0" stroke="#334155" stroke-width="1"/><text x="38" y="185.0" fill="#94a3b8" font-size="10" text-anchor="end">25%</text><line x1="44" y1="128.0" x2="292" y2="128.0" stroke="#334155" stroke-width="1"/><text x="38" y="132.0" fill="#94a3b8" font-size="10" text-anchor="end">50%</text><line x1="44" y1="75.0" x2="292" y2="75.0" stroke="#334155" stroke-width="1"/><text x="38" y="79.0" fill="#94a3b8" font-size="10" text-anchor="end">75%</text><line x1="44" y1="22.0" x2="292" y2="22.0" stroke="#334155" stroke-width="1"/><text x="38" y="26.0" fill="#94a3b8" font-size="10" text-anchor="end">100%</text><rect x="58.0" y="46.9" width="34.1" height="187.1" rx="3" fill="#4ade80"/><text x="75.0" y="40.9" fill="#e2e8f0" font-size="10" text-anchor="middle">88%</text><text x="75.0" y="268" fill="#94a3b8" font-size="10" text-anchor="middle">agent_logic</text><rect x="120.0" y="45.6" width="34.1" height="188.4" rx="3" fill="#4ade80"/><text x="137.0" y="39.6" fill="#e2e8f0" font-size="10" text-anchor="middle">89%</text><text x="137.0" y="268" fill="#94a3b8" font-size="10" text-anchor="middle">content_rules</text><rect x="181.9" y="45.6" width="34.1" height="188.4" rx="3" fill="#4ade80"/><text x="199.0" y="39.6" fill="#e2e8f0" font-size="10" text-anchor="middle">89%</text><text x="199.0" y="268" fill="#94a3b8" font-size="10" text-anchor="middle">expected_outcome</text><rect x="243.9" y="34.5" width="34.1" height="199.5" rx="3" fill="#4ade80"/><text x="261.0" y="28.5" fill="#e2e8f0" font-size="10" text-anchor="middle">94%</text><text x="261.0" y="268" fill="#94a3b8" font-size="10" text-anchor="middle">hallucination_check</text></svg></div>
+    </div>
+    <div class="panel"><h2>Per-check average score (latest run)</h2>
+      <div class="chartbox"><svg viewBox="0 0 300 280" xmlns="http://www.w3.org/2000/svg"><line x1="44" y1="234.0" x2="292" y2="234.0" stroke="#334155" stroke-width="1"/><text x="38" y="238.0" fill="#94a3b8" font-size="10" text-anchor="end">0%</text><line x1="44" y1="181.0" x2="292" y2="181.0" stroke="#334155" stroke-width="1"/><text x="38" y="185.0" fill="#94a3b8" font-size="10" text-anchor="end">25%</text><line x1="44" y1="128.0" x2="292" y2="128.0" stroke="#334155" stroke-width="1"/><text x="38" y="132.0" fill="#94a3b8" font-size="10" text-anchor="end">50%</text><line x1="44" y1="75.0" x2="292" y2="75.0" stroke="#334155" stroke-width="1"/><text x="38" y="79.0" fill="#94a3b8" font-size="10" text-anchor="end">75%</text><line x1="44" y1="22.0" x2="292" y2="22.0" stroke="#334155" stroke-width="1"/><text x="38" y="26.0" fill="#94a3b8" font-size="10" text-anchor="end">100%</text><rect x="58.0" y="46.9" width="34.1" height="187.1" rx="3" fill="#38bdf8"/><text x="75.0" y="40.9" fill="#e2e8f0" font-size="10" text-anchor="middle">88%</text><text x="75.0" y="268" fill="#94a3b8" font-size="10" text-anchor="middle">agent_logic</text><rect x="120.0" y="45.6" width="34.1" height="188.4" rx="3" fill="#38bdf8"/><text x="137.0" y="39.6" fill="#e2e8f0" font-size="10" text-anchor="middle">89%</text><text x="137.0" y="268" fill="#94a3b8" font-size="10" text-anchor="middle">content_rules</text><rect x="181.9" y="45.6" width="34.1" height="188.4" rx="3" fill="#38bdf8"/><text x="199.0" y="39.6" fill="#e2e8f0" font-size="10" text-anchor="middle">89%</text><text x="199.0" y="268" fill="#94a3b8" font-size="10" text-anchor="middle">expected_outcome</text><rect x="243.9" y="34.5" width="34.1" height="199.5" rx="3" fill="#38bdf8"/><text x="261.0" y="28.5" fill="#e2e8f0" font-size="10" text-anchor="middle">94%</text><text x="261.0" y="268" fill="#94a3b8" font-size="10" text-anchor="middle">hallucination_check</text></svg></div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel" id="failedPanel"><h2>Failed cases</h2></div>
+    <div class="panel" id="coveragePanel"><h2>Coverage gaps</h2></div>
+  </div>
+
+  <div class="panel" id="pytestPanel"><h2>Pytest suite</h2></div>
+    </div>
+
+    <aside class="sidebar">
+      <div class="panel">
+        <h2>How to read this dashboard</h2>
+        <dl>
+          <dt>Run</dt>
+          <dd>Timestamp of the latest pytest run this dashboard was generated from (UTC), plus the git commit and session duration.</dd>
+          <dt>Pass rate</dt>
+          <dd>Share of evaluated golden-anchor cases that passed: <code>passed &divide; (passed + failed)</code>.</dd>
+          <dt>Escape rate</dt>
+          <dd>Share that failed &mdash; defects the quality gate caught: <code>failed &divide; (passed + failed)</code>.</dd>
+          <dt>Confidence</dt>
+          <dd>Mean / min / max of each case&rsquo;s <code>aggregate_score</code>, which is the average of that case&rsquo;s check scores.</dd>
+          <dt>Evaluated / passed / failed</dt>
+          <dd>Counts from the latest run. Coverage gaps and no-tests-run cases are excluded from the pass rate on purpose.</dd>
+          <dt>Sent to HITL</dt>
+          <dd>Golden-anchor cases whose aggregate score fell below the threshold and were escalated to human-in-the-loop review (action <code>ESCALATE_TO_HITL</code>). They also count as failures.</dd>
+          <dt>Per-check pass rate / avg score</dt>
+          <dd>Per quality gate (<code>content_rules</code>, <code>agent_logic</code>, <code>hallucination_check</code>, <code>expected_outcome</code>): how often each passed and its mean score across all cases in the latest run.</dd>
+          <dt>Failed cases</dt>
+          <dd>Cases where <code>is_safe = False</code>, listing the failing checks and the evaluator&rsquo;s reason (e.g. missing keyword, semantic similarity below 0.85, or reply numbers contradicting fetched data).</dd>
+          <dt>Coverage gaps</dt>
+          <dd>Cases with <code>MISSING_COVERAGE</code> &mdash; a check was skipped (e.g. no <code>expected_outcome</code> declared), so the case cannot count as a pass.</dd>
+          <dt>Pytest suite</dt>
+          <dd>Raw pytest outcomes across the whole session, including the exact failed node ids.</dd>
+          <dt>Intent accuracy</dt>
+          <dd>Share of golden-anchor cases whose executed API calls exactly match the case&rsquo;s <code>required_tools</code>. Cases that declare no tool requirement (e.g. the greeting fallback) are excluded from the denominator.</dd>
+          <dt>Hallucination rate</dt>
+          <dd>Share of cases where a number in the assistant&rsquo;s reply (earthquake count, strongest magnitude, weather-station count) does not match the raw JSON the fetchers returned, read from the trace&rsquo;s <code>tool_outputs</code>. Cases where nothing was fetched are excluded.</dd>
+          <dt>Automation trust signal</dt>
+          <dd>Share of the suite classified as deterministic (offline <code>unit</code> tests) vs probabilistic (live API, user flows, golden anchors). Higher means more of the suite is reproducible offline.</dd>
+        </dl>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<script>
+const DATA = {"meta": {"generated_at": "2026-08-03T15:31:19.332952+00:00", "git_commit": "467a64b", "duration_seconds": 14.135}, "kpis": {"totals": {"total": 18, "passed": 11, "failed": 7, "coverage_gaps": 0, "no_tests_run": 0, "evaluated": 18, "hitl": 7}, "pass_rate": 0.6111111111111112, "escape_rate": 0.3888888888888889, "intent_accuracy": {"evaluated": 17, "positive": 15, "negative": 2, "rate": 0.8823529411764706}, "hallucination_rate": {"evaluated": 17, "positive": 1, "negative": 16, "rate": 0.058823529411764705}, "sent_to_hitl": {"count": 7, "rate": 0.3888888888888889}, "automation_trust_signal": {"deterministic": 55, "probabilistic": 46, "total": 101, "rate": 0.5445544554455446}, "aggregate_confidence": {"mean": 0.9027777777777778, "min": 0.75, "max": 1.0, "count": 18}, "failed_cases": [{"case_id": "GN-005", "aggregate_score": 0.75, "failing_checks": ["expected_outcome"], "reason": "Semantic similarity 0.016 below threshold 0.85."}, {"case_id": "GN-011", "aggregate_score": 0.75, "failing_checks": ["content_rules"], "reason": "Missing required keywords: ['earthquake']"}, {"case_id": "GN-012", "aggregate_score": 0.75, "failing_checks": ["content_rules"], "reason": "Contains forbidden keywords: ['weather observations']"}, {"case_id": "GN-013", "aggregate_score": 0.75, "failing_checks": ["agent_logic"], "reason": "Required tools not called with expected parameters: [{'name': 'earthquakes', 'parameters': {'north': 41.6137009009009, 'south': 39.8118990990991, 'east': -72.81745856704468, 'west': -75.19454143295532}}]"}, {"case_id": "GN-014", "aggregate_score": 0.75, "failing_checks": ["agent_logic"], "reason": "Forbidden tools were called: ['weather']"}, {"case_id": "GN-015", "aggregate_score": 0.75, "failing_checks": ["expected_outcome"], "reason": "Semantic similarity 0.122 below threshold 0.85."}, {"case_id": "GN-018", "aggregate_score": 0.75, "failing_checks": ["hallucination_check"], "reason": "Reply numbers contradict fetched data: summary says 9 earthquakes, raw JSON has 4; summary says strongest magnitude 9.0, raw JSON max is 4.7"}], "coverage_gap_cases": [], "per_check": {"agent_logic": {"total": 17, "passed": 15, "failed": 2, "skipped": 0, "pass_rate": 0.8823529411764706, "avg_score": 0.8823529411764706}, "content_rules": {"total": 18, "passed": 16, "failed": 2, "skipped": 0, "pass_rate": 0.8888888888888888, "avg_score": 0.8888888888888888}, "expected_outcome": {"total": 18, "passed": 16, "failed": 2, "skipped": 0, "pass_rate": 0.8888888888888888, "avg_score": 0.8888888888888888}, "hallucination_check": {"total": 17, "passed": 16, "failed": 1, "skipped": 0, "pass_rate": 0.9411764705882353, "avg_score": 0.9411764705882353}}}, "perCheck": {"names": ["agent_logic", "content_rules", "expected_outcome", "hallucination_check"], "passRate": [0.8823529411764706, 0.8888888888888888, 0.8888888888888888, 0.9411764705882353], "avgScore": [0.8823529411764706, 0.8888888888888888, 0.8888888888888888, 0.9411764705882353]}, "failedCases": [{"case_id": "GN-005", "aggregate_score": 0.75, "failing_checks": ["expected_outcome"], "reason": "Semantic similarity 0.016 below threshold 0.85."}, {"case_id": "GN-011", "aggregate_score": 0.75, "failing_checks": ["content_rules"], "reason": "Missing required keywords: ['earthquake']"}, {"case_id": "GN-012", "aggregate_score": 0.75, "failing_checks": ["content_rules"], "reason": "Contains forbidden keywords: ['weather observations']"}, {"case_id": "GN-013", "aggregate_score": 0.75, "failing_checks": ["agent_logic"], "reason": "Required tools not called with expected parameters: [{'name': 'earthquakes', 'parameters': {'north': 41.6137009009009, 'south': 39.8118990990991, 'east': -72.81745856704468, 'west': -75.19454143295532}}]"}, {"case_id": "GN-014", "aggregate_score": 0.75, "failing_checks": ["agent_logic"], "reason": "Forbidden tools were called: ['weather']"}, {"case_id": "GN-015", "aggregate_score": 0.75, "failing_checks": ["expected_outcome"], "reason": "Semantic similarity 0.122 below threshold 0.85."}, {"case_id": "GN-018", "aggregate_score": 0.75, "failing_checks": ["hallucination_check"], "reason": "Reply numbers contradict fetched data: summary says 9 earthquakes, raw JSON has 4; summary says strongest magnitude 9.0, raw JSON max is 4.7"}], "coverageGaps": [], "pytest": {"passed": 94, "failed": 7, "skipped": 0, "errors": 0, "deterministic_tests": 55, "probabilistic_tests": 46, "failed_nodeids": ["tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-005]", "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-011]", "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-012]", "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-013]", "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-014]", "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-015]", "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-018]"]}};
+
+function el(id) { return document.getElementById(id); }
+
+(function () {
+  const latest = DATA.latest;
+  const meta = latest.meta;
+  el("meta").textContent =
+    "Run " + fmtStamp(meta.generated_at) + " \u00b7 git " + (meta.git_commit || "n/a") +
+    " \u00b7 duration " + meta.duration_seconds + "s";
+  const k = latest.kpis;
+  const intentAcc = k.intent_accuracy || {};
+  const halRate = k.hallucination_rate || {};
+  const trust = k.automation_trust_signal || {};
+  const hitl = k.sent_to_hitl || {};
+  const cards = [
+    { label: "pass rate", value: fmtPct(k.pass_rate), cls: "green" },
+    { label: "escape rate", value: fmtPct(k.escape_rate), cls: "red" },
+    { label: "confidence mean", value: fmtNum(k.aggregate_confidence.mean), cls: "" },
+    { label: "confidence min", value: fmtNum(k.aggregate_confidence.min), cls: "" },
+    { label: "confidence max", value: fmtNum(k.aggregate_confidence.max), cls: "" },
+    { label: "evaluated", value: k.totals.evaluated, cls: "" },
+    { label: "passed", value: k.totals.passed, cls: "green" },
+    { label: "failed", value: k.totals.failed, cls: "red" },
+    { label: "sent to hitl", value: hitl.count == null ? "n/a" : hitl.count, cls: hitl.count > 0 ? "amber" : "" },
+    { label: "coverage gaps", value: k.totals.coverage_gaps, cls: k.totals.coverage_gaps ? "amber" : "" },
+    { label: "intent accuracy", value: fmtPct(intentAcc.rate), cls: "" },
+    { label: "hallucination rate", value: fmtPct(halRate.rate), cls: halRate.rate > 0 ? "red" : "" },
+    { label: "automation trust", value: fmtPct(trust.rate), cls: "green" },
+  ];
+  el("cards").innerHTML = cards.map(c =>
+    '<div class="card"><div class="value ' + c.cls + '">' + c.value + '</div>' +
+    '<div class="label">' + c.label + '</div></div>').join("");
+})();
+
+function rows(items, cols) {
+  if (!items.length) return '<p class="muted">None</p>';
+  const head = "<tr>" + cols.map(c => "<th>" + c.label + "</th>").join("") + "</tr>";
+  const body = items.map(it => "<tr>" + cols.map(c => "<td>" + c.render(it) + "</td>").join("") + "</tr>").join("");
+  return "<table>" + head + body + "</table>";
+}
+
+el("failedPanel").innerHTML =
+  "<h2>Failed cases</h2>" +
+  rows(DATA.failedCases, [
+    { label: "case", render: c => '<code>' + c.case_id + "</code>" },
+    { label: "score", render: c => fmtNum(c.aggregate_score) },
+    { label: "failing checks", render: c => (c.failing_checks || []).map(ch =>
+        '<span class="pill fail">' + ch + "</span>").join(" ") || "\u2014" },
+    { label: "reason", render: c => esc(c.reason) },
+  ]);
+
+el("coveragePanel").innerHTML =
+  "<h2>Coverage gaps</h2>" +
+  rows(DATA.coverageGaps, [
+    { label: "case", render: c => '<code>' + c.case_id + "</code>" },
+    { label: "skipped checks", render: c => (c.skipped_checks || []).join(", ") || "\u2014" },
+  ]);
+
+const ps = DATA.pytest;
+el("pytestPanel").innerHTML =
+  "<h2>Pytest suite</h2>" +
+  "<p>passed <span class='pill pass'>" + ps.passed + "</span> \u00b7 " +
+  "failed <span class='pill fail'>" + ps.failed + "</span> \u00b7 " +
+  "skipped " + ps.skipped + " \u00b7 errors " + ps.errors + "</p>" +
+  rows((ps.failed_nodeids || []).map(n => ({ n })), [
+    { label: "failed node ids", render: c => "<code>" + esc(c.n) + "</code>" },
+  ]);
+
+function fmtPct(v) { return v == null ? "n/a" : (v * 100).toFixed(1) + "%"; }
+function fmtNum(v) { return v == null ? "n/a" : Number(v).toFixed(3); }
+function fmtStamp(iso) {
+  if (!iso) return "n/a";
+  return new Date(iso).toISOString().replace("T", " ").replace(/\.\d+Z$/, " UTC");
+}
+function esc(s) {
+  const d = document.createElement("div");
+  d.textContent = s == null ? "" : String(s);
+  return d.innerHTML;
+}
+</script>
+</body>
+</html>

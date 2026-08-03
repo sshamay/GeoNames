@@ -81,6 +81,7 @@ class AskLocationAssistant:
             params = _endpoint_params(endpoint, location, plan)
             self.trace_collector.on_tool_called(endpoint, params)
             data = self._fetchers[endpoint](params)
+            self.trace_collector.on_tool_output(endpoint, data)
             results.append(EndpointResult(endpoint=endpoint, params=params, data=data))
         return summarize(results, location=location.name)
 

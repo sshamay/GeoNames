@@ -36,12 +36,23 @@ class TraceCollector(ABC):
         ...
 
     @abstractmethod
+    def on_tool_output(self, tool_name: str, data: Dict[str, Any]) -> None:
+        """Record the raw JSON returned by a GeoNames service endpoint call.
+
+        Kept separate from :meth:`on_tool_called` so the execution path stays
+        readable while raw responses stay available for KPI checks (e.g. the
+        hallucination rate compares numbers in the summary against this data).
+        """
+        ...
+
+    @abstractmethod
     def get_trace_logs(self) -> Dict[str, Any]:
         """Return the accumulated trace logs.
 
         Keys mirror the golden-anchor evaluator contract:
         - ``executed_tools``: endpoint names in call order (the execution path)
         - ``executed_tool_calls``: one ``{"name": ..., "parameters": ...}`` per call
+        - ``tool_outputs``: raw response JSON per endpoint (for KPI checks)
         - ``retrieved_context``: always empty (GeoNames fetches, not documents)
         """
         ...
@@ -58,6 +69,7 @@ class TestTraceCollector(TraceCollector):
     def __init__(self) -> None:
         self.executed_tools: List[str] = []
         self.executed_tool_calls: List[Dict[str, Any]] = []
+        self.tool_outputs: Dict[str, Any] = {}
         self.plan: Dict[str, Any] = {}
         self.location: Dict[str, Any] = {}
 
@@ -67,6 +79,10 @@ class TestTraceCollector(TraceCollector):
         """Record the call (name and params) and the path position."""
         self.executed_tools.append(tool_name)
         self.executed_tool_calls.append({"name": tool_name, "parameters": params})
+
+    def on_tool_output(self, tool_name: str, data: Dict[str, Any]) -> None:
+        """Record the raw JSON returned by the endpoint call."""
+        self.tool_outputs[tool_name] = data
 
     def on_plan(self, plan: Dict[str, Any]) -> None:
         """Record the parsed query plan."""
@@ -82,6 +98,7 @@ class TestTraceCollector(TraceCollector):
             "retrieved_context": [],
             "executed_tools": self.executed_tools,
             "executed_tool_calls": self.executed_tool_calls,
+            "tool_outputs": self.tool_outputs,
             "plan": self.plan,
             "location": self.location,
         }
@@ -90,5 +107,6 @@ class TestTraceCollector(TraceCollector):
         """Clear all collected events."""
         self.executed_tools.clear()
         self.executed_tool_calls.clear()
+        self.tool_outputs.clear()
         self.plan.clear()
         self.location.clear()

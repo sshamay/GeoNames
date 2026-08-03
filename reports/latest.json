@@ -1,30 +1,53 @@
 {
   "report_type": "aqua_golden_anchor_kpis",
-  "generated_at": "2026-08-03T14:58:20.038498+00:00",
-  "git_commit": "237f4e0",
+  "generated_at": "2026-08-03T15:31:19.332952+00:00",
+  "git_commit": "467a64b",
   "mutation_id": null,
-  "duration_seconds": 6.341,
+  "duration_seconds": 14.135,
   "kpis": {
     "totals": {
-      "total": 17,
+      "total": 18,
       "passed": 11,
-      "failed": 6,
+      "failed": 7,
       "coverage_gaps": 0,
       "no_tests_run": 0,
-      "evaluated": 17
+      "evaluated": 18,
+      "hitl": 7
     },
-    "pass_rate": 0.6470588235294118,
-    "escape_rate": 0.35294117647058826,
+    "pass_rate": 0.6111111111111112,
+    "escape_rate": 0.3888888888888889,
+    "intent_accuracy": {
+      "evaluated": 17,
+      "positive": 15,
+      "negative": 2,
+      "rate": 0.8823529411764706
+    },
+    "hallucination_rate": {
+      "evaluated": 17,
+      "positive": 1,
+      "negative": 16,
+      "rate": 0.058823529411764705
+    },
+    "sent_to_hitl": {
+      "count": 7,
+      "rate": 0.3888888888888889
+    },
+    "automation_trust_signal": {
+      "deterministic": 55,
+      "probabilistic": 46,
+      "total": 101,
+      "rate": 0.5445544554455446
+    },
     "aggregate_confidence": {
-      "mean": 0.8823529411764705,
-      "min": 0.6666666666666666,
+      "mean": 0.9027777777777778,
+      "min": 0.75,
       "max": 1.0,
-      "count": 17
+      "count": 18
     },
     "failed_cases": [
       {
         "case_id": "GN-005",
-        "aggregate_score": 0.6666666666666666,
+        "aggregate_score": 0.75,
         "failing_checks": [
           "expected_outcome"
         ],
@@ -32,7 +55,7 @@
       },
       {
         "case_id": "GN-011",
-        "aggregate_score": 0.6666666666666666,
+        "aggregate_score": 0.75,
         "failing_checks": [
           "content_rules"
         ],
@@ -40,7 +63,7 @@
       },
       {
         "case_id": "GN-012",
-        "aggregate_score": 0.6666666666666666,
+        "aggregate_score": 0.75,
         "failing_checks": [
           "content_rules"
         ],
@@ -48,7 +71,7 @@
       },
       {
         "case_id": "GN-013",
-        "aggregate_score": 0.6666666666666666,
+        "aggregate_score": 0.75,
         "failing_checks": [
           "agent_logic"
         ],
@@ -56,7 +79,7 @@
       },
       {
         "case_id": "GN-014",
-        "aggregate_score": 0.6666666666666666,
+        "aggregate_score": 0.75,
         "failing_checks": [
           "agent_logic"
         ],
@@ -64,53 +87,72 @@
       },
       {
         "case_id": "GN-015",
-        "aggregate_score": 0.6666666666666666,
+        "aggregate_score": 0.75,
         "failing_checks": [
           "expected_outcome"
         ],
         "reason": "Semantic similarity 0.122 below threshold 0.85."
+      },
+      {
+        "case_id": "GN-018",
+        "aggregate_score": 0.75,
+        "failing_checks": [
+          "hallucination_check"
+        ],
+        "reason": "Reply numbers contradict fetched data: summary says 9 earthquakes, raw JSON has 4; summary says strongest magnitude 9.0, raw JSON max is 4.7"
       }
     ],
     "coverage_gap_cases": [],
     "per_check": {
       "agent_logic": {
-        "total": 16,
-        "passed": 14,
+        "total": 17,
+        "passed": 15,
         "failed": 2,
         "skipped": 0,
-        "pass_rate": 0.875,
-        "avg_score": 0.875
+        "pass_rate": 0.8823529411764706,
+        "avg_score": 0.8823529411764706
       },
       "content_rules": {
-        "total": 17,
-        "passed": 15,
+        "total": 18,
+        "passed": 16,
         "failed": 2,
         "skipped": 0,
-        "pass_rate": 0.8823529411764706,
-        "avg_score": 0.8823529411764706
+        "pass_rate": 0.8888888888888888,
+        "avg_score": 0.8888888888888888
       },
       "expected_outcome": {
-        "total": 17,
-        "passed": 15,
+        "total": 18,
+        "passed": 16,
         "failed": 2,
         "skipped": 0,
-        "pass_rate": 0.8823529411764706,
-        "avg_score": 0.8823529411764706
+        "pass_rate": 0.8888888888888888,
+        "avg_score": 0.8888888888888888
+      },
+      "hallucination_check": {
+        "total": 17,
+        "passed": 16,
+        "failed": 1,
+        "skipped": 0,
+        "pass_rate": 0.9411764705882353,
+        "avg_score": 0.9411764705882353
       }
     }
   },
   "pytest_suite": {
-    "passed": 11,
-    "failed": 6,
+    "passed": 94,
+    "failed": 7,
     "skipped": 0,
     "errors": 0,
+    "deterministic_tests": 55,
+    "probabilistic_tests": 46,
     "failed_nodeids": [
       "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-005]",
       "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-011]",
       "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-012]",
       "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-013]",
       "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-014]",
-      "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-015]"
+      "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-015]",
+      "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-018]"
     ]
   }
 }

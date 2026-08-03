@@ -451,5 +451,32 @@
     ],
     "expected_outcome": "Found weather observations from 5 stations near Paris.",
     "threshold": 0.9
+  },
+  {
+    "case_id": "GN-018",
+    "scenario": "Adversarial: hallucination demo - the assistant fabricates an earthquake count; the hallucination gate must fail the case",
+    "user_input": "Any earthquakes today near London?",
+    "simulated_output": "Found 9 recent earthquakes (strongest magnitude 9.0) near London.",
+    "required_keywords": [
+      "recent earthquakes",
+      "near London"
+    ],
+    "forbidden_keywords": [],
+    "required_tools": [
+      {
+        "name": "earthquakes",
+        "parameters": {
+          "north": 52.4083009009009,
+          "south": 50.606499099099096,
+          "east": 1.3196313659159382,
+          "west": -1.575231365915938
+        }
+      }
+    ],
+    "forbidden_tools": [
+      "weather"
+    ],
+    "expected_outcome": "Found 9 recent earthquakes (strongest magnitude 9.0) near London.",
+    "threshold": 0.9
   }
 ]

@@ -14,6 +14,7 @@ from geonames.clients import GeoNamesClient
 from geonames.config_loader import Settings, load_config
 from geonames.services import EarthquakesAPI, WeatherAPI
 from test_utils.find_nearby import FindNearbyAPI
+from test_utils.kpi_metrics import claim_mismatches
 
 
 @pytest.fixture(scope="session")
@@ -94,13 +95,15 @@ def pytest_generate_tests(metafunc):
 
 
 def _load_aqua_evaluators():
-    """Load the generic AQuAEvaluators class from test_utils/aqua_evaluation.py."""
-    here = os.path.dirname(__file__)
-    mod_path = os.path.join(here, "test_utils", "aqua_evaluation.py")
-    spec = importlib.util.spec_from_file_location("aqua_evaluation", mod_path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module.AQuAEvaluators
+    """Load the generic AQuAEvaluators class and register project hooks.
+
+    ``hallucination_extractor`` wires the project's number-claim checker into
+    the generic hallucination gate (reply numbers vs raw fetched data).
+    """
+    from test_utils.aqua_evaluation import AQuAEvaluators
+
+    AQuAEvaluators.hallucination_extractor = staticmethod(claim_mismatches)
+    return AQuAEvaluators
 
 
 @pytest.fixture(scope="session")
@@ -109,6 +112,26 @@ def aqua_evaluators_class():
     Load the AQuAEvaluators class from test_utils/aqua_evaluation.py.
     """
     return _load_aqua_evaluators()
+
+
+def _render_aqua_dashboard(report_dir):
+    """Regenerate reports/dashboard.html from the latest run + history.
+
+    Loads scripts/render_dashboard.py via importlib so the repo scripts dir
+    does not need to be importable (conftest runs from tests/). Never raises:
+    the dashboard is best-effort and must not break a session.
+    """
+    here = os.path.dirname(__file__)
+    script_path = os.path.join(os.path.dirname(here), "scripts", "render_dashboard.py")
+    if not os.path.exists(script_path):
+        return None
+    spec = importlib.util.spec_from_file_location("render_dashboard", script_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.render(
+        report_dir=report_dir,
+        out_path=os.path.join(report_dir, "dashboard.html"),
+    )
 
 
 @pytest.fixture(scope="session")
@@ -141,7 +164,7 @@ def run_ledger(request):
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
-    """Track raw pytest outcomes (whole-suite context for the KPI report)."""
+    """Track raw pytest outcomes + determinism (whole-suite context)."""
     outcome = yield
     report = outcome.get_result()
     if report.when == "call":
@@ -149,6 +172,9 @@ def pytest_runtest_makereport(item, call):
         ledger = session.stash.get(_LEDGER_STASH_KEY, None) if session is not None else None
         if ledger is not None:
             ledger.note_pytest_outcome(item.nodeid, report.outcome)
+            # unit-marker tests are offline/deterministic; everything else (live
+            # services, user flows, golden anchors) is probabilistic.
+            ledger.note_determinism(bool(list(item.iter_markers("unit"))))
 
 
 def pytest_sessionfinish(session, exitstatus):
@@ -170,6 +196,12 @@ def pytest_sessionfinish(session, exitstatus):
             kpis["totals"]["coverage_gaps"],
             100.0 * (kpis["pass_rate"] or 0.0), 100.0 * (kpis["escape_rate"] or 0.0),
             kpis["aggregate_confidence"]["mean"] or 0.0)
+        try:
+            dash_path = _render_aqua_dashboard(ledger.report_dir)
+            if dash_path:
+                logger.info("AQuA dashboard written: %s", dash_path)
+        except Exception as dash_exc:  # pragma: no cover - dashboard is best-effort
+            logger.warning("AQuA dashboard render failed: %s", dash_exc)
     except Exception as exc:  # pragma: no cover - reporter must never break a run
         logger.warning("AQuA KPI reporting failed: %s", exc)
 
