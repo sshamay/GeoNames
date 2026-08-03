@@ -14,6 +14,10 @@ except ImportError:
 # should decide instead of the cheap matcher.
 EXPECTED_OUTCOME_SEMANTIC_THRESHOLD = 0.85
 
+# AQuA detect.md P6: the LLM-as-a-Judge verdict score that counts as a pass
+# once the cheap deterministic/semantic layers could not decide.
+LLM_JUDGE_PASS_THRESHOLD = 0.5
+
 
 def extract_assistant_output(result):
     """
@@ -160,6 +164,15 @@ class AQuAEvaluators:
     # project registers one. None keeps the framework portable.
     hallucination_extractor = None
 
+    # Pluggable project hook for the AQuA P6 LLM-as-a-Judge flow:
+    # callable(ai_output, expected_outcome, retrieved_context) ->
+    # {"score": float (0..1), "reason": str}. Invoked only when the cheap
+    # deterministic (P4) and semantic (P5) layers cannot reach a verdict in
+    # evaluate_expected_outcome. None keeps the framework fully offline and
+    # deterministic (the pre-judge behavior: fail below the semantic
+    # threshold).
+    llm_judge = None
+
     @staticmethod
     def evaluate_execution_path(trace_logs, required_documents):
         """
@@ -302,11 +315,17 @@ class AQuAEvaluators:
         return {"check_name": "agent_logic", "status": "PASSED" if score == 1.0 else "FAILED", "score": score, "reason": "; ".join(reasons)}
 
     @staticmethod
-    def evaluate_expected_outcome(ai_output, expected_outcome):
+    def evaluate_expected_outcome(ai_output, expected_outcome, retrieved_context=None):
         """
-        Layer X: Expected outcome checking.
+        Layer X: Expected outcome checking (AQuA P3/P4/P5/P6 escalation).
+
         Deterministic exact match first (P4); falls back to JSON structural
-        match, then semantic (cosine) similarity (P5).
+        match, then semantic (cosine) similarity (P5). When the cheap semantic
+        layer cannot reach the threshold, the AQuA P6 LLM-as-a-Judge flow
+        escalates to the project-registered ``llm_judge`` hook, which audits
+        groundedness/completeness against the golden reference using the
+        retrieved context. Without a configured judge the case fails below
+        the threshold (the previous behavior).
         """
         if expected_outcome is None or expected_outcome == "":
             # No expectation declared: flag it so empty expectations are not
@@ -344,6 +363,22 @@ class AQuAEvaluators:
             similarity = _cosine(_embed(ai_output), _embed(expected_outcome))
             if similarity >= EXPECTED_OUTCOME_SEMANTIC_THRESHOLD:
                 return {"check_name": "expected_outcome", "status": "PASSED", "score": 1.0}
+
+            # P6 LLM-as-a-Judge: the cheap layers could not decide, so escalate
+            # to the project's judge (P3 progressive evaluation). The judge
+            # returns a score that feeds straight into risk-based confidence.
+            judge = AQuAEvaluators.llm_judge
+            if judge is not None:
+                verdict = judge(ai_output, expected_outcome, list(retrieved_context or []))
+                score = verdict.get("score")
+                if not isinstance(score, (int, float)) or not 0.0 <= score <= 1.0:
+                    score = 0.0
+                return {
+                    "check_name": "llm_judge",
+                    "status": "PASSED" if score >= LLM_JUDGE_PASS_THRESHOLD else "FAILED",
+                    "score": score,
+                    "reason": f"LLM judge verdict ({score:.2f}): {verdict.get('reason') or 'no rationale'}",
+                }
             return {"check_name": "expected_outcome", "status": "FAILED", "score": 0.0,
                     "reason": f"Semantic similarity {similarity:.3f} below threshold {EXPECTED_OUTCOME_SEMANTIC_THRESHOLD}."}
 
@@ -445,9 +480,14 @@ class AQuAEvaluators:
             results.append(
                 cls.evaluate_agent_logic(trace_logs, case.get("required_tools"), case.get("forbidden_tools")))
 
-        # 4. Check Expected Outcome
+        # 4. Check Expected Outcome (P4/P5, escalating to the P6 LLM judge
+        # when a judge is configured and the cheap layers cannot decide).
         if "expected_outcome" in case:
-            results.append(cls.evaluate_expected_outcome(content, case.get("expected_outcome")))
+            results.append(cls.evaluate_expected_outcome(
+                content,
+                case.get("expected_outcome"),
+                (trace_logs or {}).get("retrieved_context"),
+            ))
 
         # 5. Check Hallucination Consistency (reply numbers vs fetched data).
         # Runs on every case that fetched data, when the project registered a

@@ -48,6 +48,37 @@ All runtime settings live in `config/config.yaml` (env profiles `dev` / `test` /
 `geonames.config_loader.load_config(env="test")` path the rest of the code uses,
 so tests never re-declare settings. Never hardcode URLs or secrets in code.
 
+### AQuA P6 LLM-as-a-Judge
+
+The AI-assistant golden-anchor suite evaluates every case through the AQuA
+pipeline: **P3** deterministic checks first (structure, keywords, tool-call
+params, exact/JSON expected outcome) with fail-fast, cheapest layer first;
+**P4** a deterministic `expected_outcome` match; **P5** semantic cosine
+similarity (`>= 0.85` passes); then — only if the cheaper layers cannot decide
+— **P6** an optional LLM-as-a-Judge that scores groundedness/completeness
+against a structured rubric on a 0-1 scale. The check id `llm_judge` passes at
+`score >= 0.5`.
+
+The judge is **off by default** so the suite stays fully offline and
+deterministic. Enable it in `config/config.yaml` (local, gitignored):
+
+```yaml
+judge_enabled: true
+judge_base_url: https://api.openai.com/v1   # any OpenAI-compatible endpoint
+judge_model: gpt-4o-mini
+judge_api_key: <your-secret>                # never commit this
+judge_timeout: 60
+judge_rubric: groundedness_and_completeness
+```
+
+The hook is pluggable (`tests/test_utils/aqua_evaluation.py` →
+`AQuAEvaluators.llm_judge`): any callable with signature
+`(ai_output, expected_outcome, retrieved_context) -> {"score": 0..1, "reason": str}`
+works. When `judge_enabled` is false — or URL/model/key are missing —
+`build_llm_judge` returns `None` and below-threshold answers fail exactly as
+before. `config/config.example.yaml` documents the keys; `config.yaml` holds
+the real (secret) values.
+
 ## Design decisions
 
 - **One config file, not `tests/config/`** — env profiles live in the root

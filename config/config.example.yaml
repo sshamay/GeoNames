@@ -9,6 +9,17 @@ defaults:
   assistant_max_rows: 5
   # Copy your username (from geonames.org) into config.yaml - never commit it here.
   geonames_username: ""
+  # AQuA P6 LLM-as-a-Judge: golden-anchor cases that the deterministic and
+  # semantic layers cannot decide are escalated to this judge for groundedness/
+  # completeness scoring. Off by default (the suite then stays fully offline
+  # and deterministic). Enable and fill in config.yaml only - judge_api_key is
+  # a secret and must never be committed.
+  judge_enabled: false
+  judge_base_url: ""      # e.g. https://api.openai.com/v1 (any OpenAI-compatible)
+  judge_model: ""         # e.g. gpt-4o-mini
+  judge_api_key: ""
+  judge_timeout: 60
+  judge_rubric: groundedness_and_completeness
 
 envs:
   test:

@@ -35,3 +35,20 @@ def test_load_config_raises_when_file_missing():
     missing_path = Path("/nonexistent/config.yaml")
     with pytest.raises(ConfigError, match="Config file not found"):
         load_config(config_path=missing_path)
+
+
+@pytest.mark.unit
+def test_judge_disabled_by_default(settings):
+    """The judge stays off unless enabled in config.yaml."""
+    assert settings.judge_enabled is False
+    assert settings.judge_base_url is None
+    assert settings.judge_model is None
+    assert settings.judge_api_key is None
+
+
+@pytest.mark.unit
+def test_judge_defaults_without_extra_keys():
+    """Missing judge keys fall back to safe defaults instead of raising."""
+    settings = load_config(env="test")
+    assert settings.judge_timeout == 60.0
+    assert settings.judge_rubric == "groundedness_and_completeness"

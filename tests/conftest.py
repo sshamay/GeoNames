@@ -94,24 +94,28 @@ def pytest_generate_tests(metafunc):
         metafunc.parametrize("case_and_id", cases, ids=ids)
 
 
-def _load_aqua_evaluators():
+def _load_aqua_evaluators(settings=None):
     """Load the generic AQuAEvaluators class and register project hooks.
 
     ``hallucination_extractor`` wires the project's number-claim checker into
     the generic hallucination gate (reply numbers vs raw fetched data).
+    ``llm_judge`` wires the AQuA P6 judge when configured in config.yaml; it
+    stays None (fully offline) when disabled or underconfigured.
     """
     from test_utils.aqua_evaluation import AQuAEvaluators
+    from test_utils.llm_judge import build_llm_judge
 
     AQuAEvaluators.hallucination_extractor = staticmethod(claim_mismatches)
+    AQuAEvaluators.llm_judge = build_llm_judge(settings) if settings is not None else None
     return AQuAEvaluators
 
 
 @pytest.fixture(scope="session")
-def aqua_evaluators_class():
+def aqua_evaluators_class(settings):
     """
     Load the AQuAEvaluators class from test_utils/aqua_evaluation.py.
     """
-    return _load_aqua_evaluators()
+    return _load_aqua_evaluators(settings)
 
 
 def _render_aqua_dashboard(report_dir):

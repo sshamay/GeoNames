@@ -1,9 +1,9 @@
 {
   "report_type": "aqua_golden_anchor_kpis",
-  "generated_at": "2026-08-03T16:11:27.383422+00:00",
-  "git_commit": "b3ca5c7",
+  "generated_at": "2026-08-03T16:30:06.875669+00:00",
+  "git_commit": "64eaacc",
   "mutation_id": null,
-  "duration_seconds": 14.82,
+  "duration_seconds": 13.203,
   "kpis": {
     "totals": {
       "total": 18,
@@ -33,10 +33,10 @@
       "rate": 0.3888888888888889
     },
     "automation_trust_signal": {
-      "deterministic": 61,
+      "deterministic": 78,
       "probabilistic": 46,
-      "total": 107,
-      "rate": 0.5700934579439252
+      "total": 124,
+      "rate": 0.6290322580645161
     },
     "aggregate_confidence": {
       "mean": 0.9027777777777778,
@@ -139,11 +139,11 @@
     }
   },
   "pytest_suite": {
-    "passed": 100,
+    "passed": 117,
     "failed": 7,
     "skipped": 0,
     "errors": 0,
-    "deterministic_tests": 61,
+    "deterministic_tests": 78,
     "probabilistic_tests": 46,
     "failed_nodeids": [
       "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-005]",
