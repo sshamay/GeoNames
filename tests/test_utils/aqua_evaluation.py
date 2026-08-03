@@ -119,6 +119,35 @@ def _cosine(vec_a, vec_b):
     return dot / (norm_a * norm_b)
 
 
+def _call_matches_params(call, required):
+    """True when a recorded call matches a required tool's name and declared parameters."""
+    if call.get("name") != required["name"]:
+        return False
+    required_params = required.get("parameters")
+    if not required_params:
+        return True
+    actual_params = call.get("parameters") or {}
+    if not actual_params:
+        return False
+    return all(actual_params.get(key) == value for key, value in required_params.items())
+
+
+def required_tool_executed(required, executed_tools, tool_calls):
+    """
+    Whether a required tool was actually called, with the right parameters.
+
+    ``required`` is either a tool name or a dict with ``name`` and optional
+    ``parameters``. When parameters are declared and a ``tool_calls`` trace is
+    present, at least one recorded call must match the name and every declared
+    parameter value exactly. Otherwise (no parameters declared, or no call-level
+    trace) it degrades to a name-only check against ``executed_tools``.
+    """
+    name = required["name"] if isinstance(required, dict) else required
+    if isinstance(required, dict) and required.get("parameters") and tool_calls:
+        return any(_call_matches_params(c, required) for c in tool_calls)
+    return name in executed_tools
+
+
 class AQuAEvaluators:
     """
     A modular evaluation engine based on the AQuA framework.
@@ -252,22 +281,8 @@ class AQuAEvaluators:
         def _names(tools):
             return [t.get("name", t) if isinstance(t, dict) else t for t in tools]
 
-        def _call_matches(call, required):
-            if call["name"] != required["name"]:
-                return False
-            required_params = required.get("parameters")
-            if not required_params:
-                return True
-            actual_params = call.get("parameters") or {}
-            if not actual_params:
-                return False
-            return all(actual_params.get(k) == v for k, v in required_params.items())
-
         def _executed(required):
-            name = required["name"] if isinstance(required, dict) else required
-            if isinstance(required, dict) and required.get("parameters") and tool_calls:
-                return any(_call_matches(c, required) for c in tool_calls)
-            return name in executed_tools
+            return required_tool_executed(required, executed_tools, tool_calls)
 
         required_names = _names(required_tools or [])
         forbidden_names = _names(forbidden_tools or [])
@@ -358,17 +373,28 @@ class AQuAEvaluators:
         """
         Per-case bool-or-None KPI metrics for the AQuA run ledger.
 
-        - ``intent_accurate``: executed tools exactly match required_tools.
-          None when the case declares no tools (excluded from the rate).
+        - ``intent_accurate``: the called tool names form exactly the set of
+          required tools, and every required tool that declares parameters was
+          called with exactly those parameter values. None when the case
+          declares no tools (excluded from the rate).
         - ``hallucinated``: the reply contradicts the fetched data. None when
           nothing was fetched (nothing to compare against).
         """
-        required = [
+        required = case.get("required_tools") or []
+        required_names = {
             t.get("name", t) if isinstance(t, dict) else t
-            for t in (case.get("required_tools") or [])
-        ]
-        actual = set((trace_logs or {}).get("executed_tools") or [])
-        intent = None if not required else actual == set(required)
+            for t in required
+        }
+        if not required_names:
+            intent = None
+        else:
+            executed_tools = (trace_logs or {}).get("executed_tools") or []
+            tool_calls = (trace_logs or {}).get("executed_tool_calls") or []
+            names_ok = set(executed_tools) == required_names
+            params_ok = all(
+                required_tool_executed(t, executed_tools, tool_calls) for t in required
+            )
+            intent = names_ok and params_ok
 
         outputs = (trace_logs or {}).get("tool_outputs") or {}
         hallucinated = None
