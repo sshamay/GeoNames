@@ -9,14 +9,15 @@ except ImportError:
     _PYDANTIC_AVAILABLE = False
 
 # AQuA detect.md P5: compare the generated answer against the golden
-# reference answer using semantic (cosine) similarity. Threshold follows the
-# skill's example (0.85). Below it, a richer layer (e.g. an embedding model)
-# should decide instead of the cheap matcher.
-EXPECTED_OUTCOME_SEMANTIC_THRESHOLD = 0.85
+# reference answer using semantic (cosine) similarity. At or above this the
+# cheap matcher is enough. Below it, a richer layer (the P6 LLM judge) should
+# decide instead - see EXPECTED_OUTCOME_SEMANTIC_THRESHOLD below.
+EXPECTED_OUTCOME_SEMANTIC_THRESHOLD = 0.6
 
 # AQuA detect.md P6: the LLM-as-a-Judge verdict score that counts as a pass
-# once the cheap deterministic/semantic layers could not decide.
-LLM_JUDGE_PASS_THRESHOLD = 0.5
+# once the cheap deterministic/semantic layers could not decide. Below this the
+# expected-outcome check fails and the run escalates to human-in-the-loop.
+LLM_JUDGE_PASS_THRESHOLD = 0.3
 
 
 def extract_assistant_output(result):

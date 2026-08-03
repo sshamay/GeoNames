@@ -1,9 +1,9 @@
 {
   "report_type": "aqua_golden_anchor_kpis",
-  "generated_at": "2026-08-03T16:30:06.875669+00:00",
-  "git_commit": "64eaacc",
+  "generated_at": "2026-08-03T16:46:45.009716+00:00",
+  "git_commit": "8244f0e",
   "mutation_id": null,
-  "duration_seconds": 13.203,
+  "duration_seconds": 38.728,
   "kpis": {
     "totals": {
       "total": 18,
@@ -33,10 +33,10 @@
       "rate": 0.3888888888888889
     },
     "automation_trust_signal": {
-      "deterministic": 78,
-      "probabilistic": 46,
-      "total": 124,
-      "rate": 0.6290322580645161
+      "deterministic": 0,
+      "probabilistic": 18,
+      "total": 18,
+      "rate": 0.0
     },
     "aggregate_confidence": {
       "mean": 0.9027777777777778,
@@ -49,9 +49,9 @@
         "case_id": "GN-005",
         "aggregate_score": 0.75,
         "failing_checks": [
-          "expected_outcome"
+          "llm_judge"
         ],
-        "reason": "Semantic similarity 0.016 below threshold 0.85."
+        "reason": "LLM judge verdict (0.00): Judge returned unparseable output: The"
       },
       {
         "case_id": "GN-011",
@@ -89,9 +89,9 @@
         "case_id": "GN-015",
         "aggregate_score": 0.75,
         "failing_checks": [
-          "expected_outcome"
+          "llm_judge"
         ],
-        "reason": "Semantic similarity 0.122 below threshold 0.85."
+        "reason": "LLM judge verdict (0.00): Judge returned unparseable output: The"
       },
       {
         "case_id": "GN-018",
@@ -121,12 +121,12 @@
         "avg_score": 0.8888888888888888
       },
       "expected_outcome": {
-        "total": 18,
+        "total": 16,
         "passed": 16,
-        "failed": 2,
+        "failed": 0,
         "skipped": 0,
-        "pass_rate": 0.8888888888888888,
-        "avg_score": 0.8888888888888888
+        "pass_rate": 1.0,
+        "avg_score": 1.0
       },
       "hallucination_check": {
         "total": 17,
@@ -135,16 +135,24 @@
         "skipped": 0,
         "pass_rate": 0.9411764705882353,
         "avg_score": 0.9411764705882353
+      },
+      "llm_judge": {
+        "total": 2,
+        "passed": 0,
+        "failed": 2,
+        "skipped": 0,
+        "pass_rate": 0.0,
+        "avg_score": 0.0
       }
     }
   },
   "pytest_suite": {
-    "passed": 117,
+    "passed": 11,
     "failed": 7,
     "skipped": 0,
     "errors": 0,
-    "deterministic_tests": 78,
-    "probabilistic_tests": 46,
+    "deterministic_tests": 0,
+    "probabilistic_tests": 18,
     "failed_nodeids": [
       "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-005]",
       "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-011]",

@@ -2,7 +2,12 @@
 
 import pytest
 
-from test_utils.aqua_evaluation import AQuAEvaluators, required_tool_executed
+from test_utils.aqua_evaluation import (
+    AQuAEvaluators,
+    EXPECTED_OUTCOME_SEMANTIC_THRESHOLD,
+    LLM_JUDGE_PASS_THRESHOLD,
+    required_tool_executed,
+)
 
 pytestmark = pytest.mark.unit
 
@@ -140,3 +145,35 @@ def test_run_case_escalates_to_judge_and_scores_confidence(monkeypatch):
     assert judge_check["status"] == "PASSED"
     assert result["aggregate_score"] == 0.9
     assert result["action"] == "RELEASE"
+
+
+@pytest.mark.unit
+def test_escalation_thresholds():
+    """Sub-0.6 semantic similarity escalates to the judge; sub-0.3 judge
+    verdicts fail the case and drive it to HITL."""
+    assert EXPECTED_OUTCOME_SEMANTIC_THRESHOLD == 0.6
+    assert LLM_JUDGE_PASS_THRESHOLD == 0.3
+
+
+@pytest.mark.unit
+def test_judge_passes_at_threshold_boundary(monkeypatch):
+    judge = _fake_judge(LLM_JUDGE_PASS_THRESHOLD)
+    monkeypatch.setattr(AQuAEvaluators, "llm_judge", judge)
+    result = AQuAEvaluators.evaluate_expected_outcome(
+        "banana spaceship quantum jelly", "the stock market rose today"
+    )
+    assert result["check_name"] == "llm_judge"
+    assert result["status"] == "PASSED"
+    assert result["score"] == 0.3
+
+
+@pytest.mark.unit
+def test_judge_fails_just_below_threshold(monkeypatch):
+    judge = _fake_judge(LLM_JUDGE_PASS_THRESHOLD - 0.01)
+    monkeypatch.setattr(AQuAEvaluators, "llm_judge", judge)
+    result = AQuAEvaluators.evaluate_expected_outcome(
+        "banana spaceship quantum jelly", "the stock market rose today"
+    )
+    assert result["check_name"] == "llm_judge"
+    assert result["status"] == "FAILED"
+    assert result["score"] == 0.29

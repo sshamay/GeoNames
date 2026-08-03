@@ -38,17 +38,24 @@ def test_load_config_raises_when_file_missing():
 
 
 @pytest.mark.unit
-def test_judge_disabled_by_default(settings):
-    """The judge stays off unless enabled in config.yaml."""
+def test_judge_config_loaded_from_yaml(settings):
+    """The local config.yaml maps judge keys onto Settings."""
+    assert settings.judge_enabled is True
+    assert settings.judge_base_url == "https://oai.aihorde.net/v1"
+    assert settings.judge_model == "google/gemma-4-31b"
+    assert settings.judge_api_key == "0000000000"
+    assert settings.judge_timeout == 120
+
+
+@pytest.mark.unit
+def test_judge_fallback_defaults_without_keys(tmp_path):
+    """Missing judge keys fall back to safe defaults (offline) instead of raising."""
+    config_file = tmp_path / "config.yaml"
+    config_file.write_text("defaults:\n  app_name: geonames\nenvs:\n  test:\n")
+    settings = load_config(env="test", config_path=config_file)
     assert settings.judge_enabled is False
     assert settings.judge_base_url is None
     assert settings.judge_model is None
     assert settings.judge_api_key is None
-
-
-@pytest.mark.unit
-def test_judge_defaults_without_extra_keys():
-    """Missing judge keys fall back to safe defaults instead of raising."""
-    settings = load_config(env="test")
     assert settings.judge_timeout == 60.0
     assert settings.judge_rubric == "groundedness_and_completeness"

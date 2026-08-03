@@ -12,13 +12,17 @@ defaults:
   # AQuA P6 LLM-as-a-Judge: golden-anchor cases that the deterministic and
   # semantic layers cannot decide are escalated to this judge for groundedness/
   # completeness scoring. Off by default (the suite then stays fully offline
-  # and deterministic). Enable and fill in config.yaml only - judge_api_key is
-  # a secret and must never be committed.
+  # and deterministic).
+  #
+  # Keyless default: AI Horde anonymous access - no signup or API key. Use the
+  # literal key "0000000000" at https://oai.aihorde.net/v1 (any OpenAI-compatible
+  # endpoint/model works). Note: anonymous Horde access is low-priority queue and
+  # runs on community volunteers - fine for local test runs, not for sensitive data.
   judge_enabled: false
-  judge_base_url: ""      # e.g. https://api.openai.com/v1 (any OpenAI-compatible)
-  judge_model: ""         # e.g. gpt-4o-mini
-  judge_api_key: ""
-  judge_timeout: 60
+  judge_base_url: https://oai.aihorde.net/v1
+  judge_model: google/gemma-4-31b
+  judge_api_key: "0000000000"
+  judge_timeout: 120
   judge_rubric: groundedness_and_completeness
 
 envs:

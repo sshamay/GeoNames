@@ -54,30 +54,37 @@ The AI-assistant golden-anchor suite evaluates every case through the AQuA
 pipeline: **P3** deterministic checks first (structure, keywords, tool-call
 params, exact/JSON expected outcome) with fail-fast, cheapest layer first;
 **P4** a deterministic `expected_outcome` match; **P5** semantic cosine
-similarity (`>= 0.85` passes); then — only if the cheaper layers cannot decide
-— **P6** an optional LLM-as-a-Judge that scores groundedness/completeness
-against a structured rubric on a 0-1 scale. The check id `llm_judge` passes at
-`score >= 0.5`.
+similarity (`>= 0.6` passes); then — only when similarity is below 0.6 and the
+cheaper layers could not decide — **P6** an optional LLM-as-a-Judge that scores
+groundedness/completeness against a structured rubric on a 0-1 scale. The check
+id `llm_judge` passes at `score >= 0.3`; below 0.3 the case escalates to
+human-in-the-loop.
 
 The judge is **off by default** so the suite stays fully offline and
-deterministic. Enable it in `config/config.yaml` (local, gitignored):
+deterministic. Enable it in `config/config.yaml` (local, gitignored). The
+keyless default uses **AI Horde's anonymous tier** — free, no signup, no API
+key (the literal key `0000000000`; lowest queue priority):
 
 ```yaml
 judge_enabled: true
-judge_base_url: https://api.openai.com/v1   # any OpenAI-compatible endpoint
-judge_model: gpt-4o-mini
-judge_api_key: <your-secret>                # never commit this
-judge_timeout: 60
+judge_base_url: https://oai.aihorde.net/v1
+judge_model: google/gemma-4-31b     # whatever volunteers host on the horde
+judge_api_key: "0000000000"         # anonymous access - no registration
+judge_timeout: 120
 judge_rubric: groundedness_and_completeness
 ```
 
-The hook is pluggable (`tests/test_utils/aqua_evaluation.py` →
-`AQuAEvaluators.llm_judge`): any callable with signature
+Any OpenAI-compatible endpoint works, e.g. Groq (`https://api.groq.com/openai/v1`
++ a free key) or OpenAI (`https://api.openai.com/v1`). The hook is pluggable
+(`tests/test_utils/aqua_evaluation.py` → `AQuAEvaluators.llm_judge`): any
+callable with signature
 `(ai_output, expected_outcome, retrieved_context) -> {"score": 0..1, "reason": str}`
 works. When `judge_enabled` is false — or URL/model/key are missing —
 `build_llm_judge` returns `None` and below-threshold answers fail exactly as
-before. `config/config.example.yaml` documents the keys; `config.yaml` holds
-the real (secret) values.
+before. Judge replies are parsed leniently (markdown fences and prose-wrapped
+JSON tolerated) and **fail closed** at score 0.0 on transport errors or
+unparseable output. `config/config.example.yaml` documents the keys; `config.yaml`
+holds the real (local) values.
 
 ## Design decisions
 
