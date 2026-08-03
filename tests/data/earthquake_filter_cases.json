@@ -1,0 +1,41 @@
+[
+  {
+    "id": "min_magnitude_6",
+    "params": {
+      "min_magnitude": 6.0,
+      "max_rows": 5
+    },
+    "asserts": [
+      { "op": "min", "field": "magnitude", "value": 6.0 }
+    ]
+  },
+  {
+    "id": "max_depth_20",
+    "params": {
+      "max_depth": 20,
+      "max_rows": 10
+    },
+    "asserts": [
+      { "op": "max", "field": "depth", "value": 20 }
+    ]
+  },
+  {
+    "id": "date_2012_04_11",
+    "params": {
+      "date": "2012-04-11",
+      "max_rows": 5
+    },
+    "asserts": [
+      { "op": "max", "field": "datetime", "value": "2012-04-11 23:59:59" }
+    ]
+  },
+  {
+    "id": "max_rows_1",
+    "params": {
+      "max_rows": 1
+    },
+    "asserts": [
+      { "op": "row_count", "value": 1 }
+    ]
+  }
+]

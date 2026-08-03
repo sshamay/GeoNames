@@ -1,0 +1,2 @@
+# Test-owned data lives here: sample payloads, expected JSON, fixture files.
+# Never re-declare runtime settings here - those come from config.yaml.

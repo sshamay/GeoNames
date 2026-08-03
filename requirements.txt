@@ -1,0 +1,2 @@
+# Dev install: editable package + test tooling (versions pinned in pyproject.toml).
+-e .[dev]

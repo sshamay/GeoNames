@@ -1,0 +1,77 @@
+# GeoNames — Python + pytest automation scaffold
+
+A minimal, standards-following pytest project scaffold for the GeoNames workspace.
+The existing `main.py` (PyCharm sample) is intentionally left untouched.
+
+## Layout
+
+```
+GeoNames/
+├── config/
+│   ├── config.yaml            # single source of truth (local, gitignored)
+│   └── config.example.yaml    # committed template
+├── src/geonames/              # the package under test / automation library
+│   ├── config_loader.py       # load + validate YAML into typed Settings
+│   ├── logging_setup.py       # one place to configure logging
+│   ├── clients/               # thin adapters for external systems (HTTP here)
+│   ├── services/              # workflows that orchestrate clients
+│   └── models/                # dataclasses for request/response data
+├── tests/
+│   ├── conftest.py            # shared fixtures (loads config with env="test")
+│   ├── data/                  # test-owned sample payloads / expected JSON
+│   ├── unit/                  # fast, isolated tests with mocks
+│   └── integration/           # tests hitting real/stubbed dependencies
+├── pyproject.toml             # packaging (src layout) + pytest config
+├── requirements.txt           # dev install entry point (-e .[dev])
+└── main.py                    # untouched PyCharm sample
+```
+
+## Setup (5 minutes)
+
+```bash
+# From the repo root - uses the existing Python 3.9 .venv
+.venv/bin/pip install -r requirements.txt
+```
+
+This installs the `geonames` package in editable mode plus the dev extras
+(`pytest`, `pytest-mock`, and runtime deps declared in `pyproject.toml`).
+
+## Running tests
+
+```bash
+.venv/bin/python -m pytest                 # full suite
+.venv/bin/python -m pytest -m unit         # fast, isolated tests only
+.venv/bin/python -m pytest tests/unit/test_config_loader.py -k env
+```
+
+## Configuration
+
+All runtime settings live in `config/config.yaml` (env profiles `dev` / `test` /
+`staging`, merged over `defaults`). `conftest.py` loads it through the same
+`geonames.config_loader.load_config(env="test")` path the rest of the code uses,
+so tests never re-declare settings. Never hardcode URLs or secrets in code.
+
+## Design decisions
+
+- **One config file, not `tests/config/`** — env profiles live in the root
+  `config.yaml`; test-owned data (payloads, expected JSON) lives in `tests/data/`.
+- **Proper packaging instead of `sys.path` hacks** — `pyproject.toml` uses the
+  src layout with `setuptools`; an editable install (`-e .[dev]`) makes
+  `import geonames` work everywhere, including PyCharm's test runner.
+- **pytest config lives in `pyproject.toml`** (`[tool.pytest.ini_options]`)
+  instead of a separate `pytest.ini` — one file for both packaging and tooling.
+- **`--strict-markers`** — the `unit` / `integration` markers are registered;
+  an unregistered marker fails the run instead of silently passing.
+- **Mocking at the boundary** — all mocks use `pytest-mock`'s `mocker` fixture
+  (see `test_logging_setup.py`). Never third-party mock libraries.
+- **Python 3.9 compatible** — `from __future__ import annotations`, typing
+  imports, dataclasses; no 3.10+ syntax.
+
+### What I'd add in production
+
+- The actual system-under-test client in `clients/` with per-endpoint methods.
+- `pytest -m integration` tests against a stub server, plus `responses`-free
+  HTTP mocking via a `_resp()` helper (skill convention: patch at the client
+  boundary with `mocker`).
+- CI: `pip install -e .[dev] && pytest -m unit` on every push.
+- `pytest-cov` + a coverage gate once the real suites exist.

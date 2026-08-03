@@ -1,0 +1,26 @@
+[
+  {
+    "id": "tohoku_2011_03_11",
+    "date": "2011-03-11",
+    "bbox": { "north": 47, "south": 31, "east": 146, "west": 129 },
+    "min_magnitude": 6.0,
+    "radius": 200,
+    "feature_class": "P"
+  },
+  {
+    "id": "kahramanmaras_2023_02_06",
+    "date": "2023-02-06",
+    "bbox": { "north": 39, "south": 35, "east": 39, "west": 35 },
+    "min_magnitude": 6.5,
+    "radius": 100,
+    "feature_class": "P"
+  },
+  {
+    "id": "ridgecrest_2019_07_06",
+    "date": "2019-07-06",
+    "bbox": { "north": 38, "south": 34, "east": -115, "west": -119 },
+    "min_magnitude": 5.5,
+    "radius": 100,
+    "feature_class": "P"
+  }
+]

@@ -1,0 +1,139 @@
+[
+  {
+    "case_id": "GN-001",
+    "scenario": "Earthquakes and weather near Sacramento",
+    "user_input": "Any recent earthquakes or bad weather near Sacramento?",
+    "required_keywords": [
+      "recent earthquakes",
+      "weather observations",
+      "near Sacramento"
+    ],
+    "forbidden_keywords": [],
+    "required_tools": [
+      {
+        "name": "earthquakes",
+        "parameters": {
+          "north": 39.4825009009009,
+          "south": 37.6806990990991,
+          "east": -120.34194132423156,
+          "west": -122.64685867576844
+        }
+      },
+      {
+        "name": "weather",
+        "parameters": {
+          "north": 39.4825009009009,
+          "south": 37.6806990990991,
+          "east": -120.34194132423156,
+          "west": -122.64685867576844
+        }
+      }
+    ],
+    "forbidden_tools": [],
+    "expected_outcome": "Found 5 recent earthquakes (strongest magnitude 6.0) and weather observations from 5 stations near Sacramento.",
+    "threshold": 0.9
+  },
+  {
+    "case_id": "GN-002",
+    "scenario": "Weather only near San Francisco",
+    "user_input": "What is the weather like around San Francisco?",
+    "required_keywords": [
+      "weather observations",
+      "near San Francisco"
+    ],
+    "forbidden_keywords": [],
+    "required_tools": [
+      {
+        "name": "weather",
+        "parameters": {
+          "north": 38.6758009009009,
+          "south": 36.8739990990991,
+          "east": -121.27963002577329,
+          "west": -123.5591699742267
+        }
+      }
+    ],
+    "forbidden_tools": [
+      "earthquakes"
+    ],
+    "expected_outcome": "Found weather observations near San Francisco.",
+    "threshold": 0.9
+  },
+  {
+    "case_id": "GN-003",
+    "scenario": "Earthquakes on a specific date near Tokyo",
+    "user_input": "On 2026-07-01 were there any earthquakes near Tokyo?",
+    "required_keywords": [
+      "recent earthquakes",
+      "near Tokyo"
+    ],
+    "forbidden_keywords": [],
+    "required_tools": [
+      {
+        "name": "earthquakes",
+        "parameters": {
+          "north": 36.5771009009009,
+          "south": 34.7752990990991,
+          "east": 140.75933881430944,
+          "west": 138.54126118569053,
+          "date": "2026-07-01"
+        }
+      }
+    ],
+    "forbidden_tools": [],
+    "expected_outcome": "Found 4 recent earthquakes (strongest magnitude 2.8) near Tokyo.",
+    "threshold": 0.9
+  },
+  {
+    "case_id": "GN-004",
+    "scenario": "Earthquakes only near London",
+    "user_input": "Any earthquakes today near London?",
+    "required_keywords": [
+      "recent earthquakes",
+      "near London"
+    ],
+    "forbidden_keywords": [],
+    "required_tools": [
+      {
+        "name": "earthquakes",
+        "parameters": {
+          "north": 52.4083009009009,
+          "south": 50.606499099099096,
+          "east": 1.3196313659159382,
+          "west": -1.575231365915938
+        }
+      }
+    ],
+    "forbidden_tools": [
+      "weather"
+    ],
+    "expected_outcome": "Found 4 recent earthquakes (strongest magnitude 4.7) near London.",
+    "threshold": 0.9
+  },
+  {
+    "case_id": "GN-005",
+    "scenario": "Earthquakes only near London",
+    "user_input": "Any earthquakes today near London?",
+    "required_keywords": [
+      "recent earthquakes",
+      "near London"
+    ],
+    "forbidden_keywords": [],
+    "required_tools": [
+      {
+        "name": "earthquakes",
+        "parameters": {
+          "north": 52.4083009009009,
+          "south": 50.606499099099096,
+          "east": 1.3196313659159382,
+          "west": -1.575231365915938
+        }
+      }
+    ],
+    "forbidden_tools": [
+      "weather"
+    ],
+    "expected_outcome": "No weather or seismic activity was reported for this area",
+    "threshold": 0.9
+  }
+]

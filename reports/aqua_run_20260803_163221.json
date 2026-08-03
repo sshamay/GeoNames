@@ -1,0 +1,222 @@
+{
+  "report_type": "aqua_golden_anchor_kpis",
+  "generated_at": "2026-08-03T13:32:21.080026+00:00",
+  "git_commit": null,
+  "mutation_id": null,
+  "duration_seconds": 2.069,
+  "kpis": {
+    "totals": {
+      "total": 5,
+      "passed": 5,
+      "failed": 0,
+      "coverage_gaps": 0,
+      "no_tests_run": 0,
+      "evaluated": 5
+    },
+    "pass_rate": 1.0,
+    "escape_rate": 0.0,
+    "aggregate_confidence": {
+      "mean": 1.0,
+      "min": 1.0,
+      "max": 1.0,
+      "count": 5
+    },
+    "failed_cases": [],
+    "coverage_gap_cases": [],
+    "per_check": {
+      "agent_logic": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0,
+        "pass_rate": 1.0,
+        "avg_score": 1.0
+      },
+      "content_rules": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0,
+        "pass_rate": 1.0,
+        "avg_score": 1.0
+      },
+      "expected_outcome": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0,
+        "pass_rate": 1.0,
+        "avg_score": 1.0
+      }
+    }
+  },
+  "pytest_suite": {
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0,
+    "failed_nodeids": []
+  },
+  "entries": [
+    {
+      "case_id": "GN-001",
+      "scenario": "Earthquakes and weather near Sacramento",
+      "user_input": "Any recent earthquakes or bad weather near Sacramento?",
+      "status": "PASSED",
+      "action": "RELEASE",
+      "is_safe": true,
+      "aggregate_score": 1.0,
+      "skipped_check_count": 0,
+      "failing_checks": [],
+      "skipped_checks": [],
+      "checks": [
+        {
+          "check_name": "content_rules",
+          "status": "PASSED",
+          "score": 1.0,
+          "reason": ""
+        },
+        {
+          "check_name": "agent_logic",
+          "status": "PASSED",
+          "score": 1.0,
+          "reason": ""
+        },
+        {
+          "check_name": "expected_outcome",
+          "status": "PASSED",
+          "score": 1.0
+        }
+      ],
+      "ai_output": "Found 5 recent earthquakes (strongest magnitude 6.0) and weather observations from 5 stations near Sacramento."
+    },
+    {
+      "case_id": "GN-002",
+      "scenario": "Weather only near San Francisco",
+      "user_input": "What is the weather like around San Francisco?",
+      "status": "PASSED",
+      "action": "RELEASE",
+      "is_safe": true,
+      "aggregate_score": 1.0,
+      "skipped_check_count": 0,
+      "failing_checks": [],
+      "skipped_checks": [],
+      "checks": [
+        {
+          "check_name": "content_rules",
+          "status": "PASSED",
+          "score": 1.0,
+          "reason": ""
+        },
+        {
+          "check_name": "agent_logic",
+          "status": "PASSED",
+          "score": 1.0,
+          "reason": ""
+        },
+        {
+          "check_name": "expected_outcome",
+          "status": "PASSED",
+          "score": 1.0
+        }
+      ],
+      "ai_output": "Found weather observations from 5 stations near San Francisco."
+    },
+    {
+      "case_id": "GN-003",
+      "scenario": "Earthquakes on a specific date near Tokyo",
+      "user_input": "On 2026-07-01 were there any earthquakes near Tokyo?",
+      "status": "PASSED",
+      "action": "RELEASE",
+      "is_safe": true,
+      "aggregate_score": 1.0,
+      "skipped_check_count": 0,
+      "failing_checks": [],
+      "skipped_checks": [],
+      "checks": [
+        {
+          "check_name": "content_rules",
+          "status": "PASSED",
+          "score": 1.0,
+          "reason": ""
+        },
+        {
+          "check_name": "agent_logic",
+          "status": "PASSED",
+          "score": 1.0,
+          "reason": ""
+        },
+        {
+          "check_name": "expected_outcome",
+          "status": "PASSED",
+          "score": 1.0
+        }
+      ],
+      "ai_output": "Found 5 recent earthquakes (strongest magnitude 5.8) near Tokyo."
+    },
+    {
+      "case_id": "GN-004",
+      "scenario": "Earthquakes only near London",
+      "user_input": "Any earthquakes today near London?",
+      "status": "PASSED",
+      "action": "RELEASE",
+      "is_safe": true,
+      "aggregate_score": 1.0,
+      "skipped_check_count": 0,
+      "failing_checks": [],
+      "skipped_checks": [],
+      "checks": [
+        {
+          "check_name": "content_rules",
+          "status": "PASSED",
+          "score": 1.0,
+          "reason": ""
+        },
+        {
+          "check_name": "agent_logic",
+          "status": "PASSED",
+          "score": 1.0,
+          "reason": ""
+        },
+        {
+          "check_name": "expected_outcome",
+          "status": "PASSED",
+          "score": 1.0
+        }
+      ],
+      "ai_output": "Found 4 recent earthquakes (strongest magnitude 4.7) near London."
+    },
+    {
+      "case_id": "GN-005",
+      "scenario": "Earthquakes only near London",
+      "user_input": "Any earthquakes today near London?",
+      "status": "PASSED",
+      "action": "RELEASE",
+      "is_safe": true,
+      "aggregate_score": 1.0,
+      "skipped_check_count": 0,
+      "failing_checks": [],
+      "skipped_checks": [],
+      "checks": [
+        {
+          "check_name": "content_rules",
+          "status": "PASSED",
+          "score": 1.0,
+          "reason": ""
+        },
+        {
+          "check_name": "agent_logic",
+          "status": "PASSED",
+          "score": 1.0,
+          "reason": ""
+        },
+        {
+          "check_name": "expected_outcome",
+          "status": "PASSED",
+          "score": 1.0
+        }
+      ],
+      "ai_output": "Found 4 recent earthquakes (strongest magnitude 4.7) near London."
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+# Committed template. Copy to config.yaml and adjust locally; never commit secrets.
+# Loaded by geonames.config_loader.load_config(env="dev" | "test" | "staging").
+
+defaults:
+  app_name: geonames
+  log_level: INFO
+  geonames_base_url: https://secure.geonames.org
+  geonames_timeout: 30
+  # llm_provider: stub | real (GEONAMES_LLM_PROVIDER env var overrides this)
+  llm_provider: stub
+  # max_rows per service call made by the assistant's fetchers
+  assistant_max_rows: 5
+  # Copy your username (from geonames.org) into config.yaml - never commit it here.
+  geonames_username: ""
+
+envs:
+  test:
+    log_level: INFO
+  dev:
+    log_level: DEBUG
+  staging:
+    log_level: WARNING

@@ -1,0 +1,24 @@
+[
+  {
+    "id": "tohoku_2011_03_11",
+    "date": "2011-03-11",
+    "bbox": { "north": 47, "south": 31, "east": 146, "west": 129 },
+    "min_magnitude": 5.0,
+    "max_rows": 200,
+    "time_tolerance_s": 120,
+    "distance_km": 100,
+    "magnitude_tolerance": 1.2,
+    "min_coverage": 0.8
+  },
+  {
+    "id": "sumatra_2012_04_11",
+    "date": "2012-04-11",
+    "bbox": { "north": 8, "south": -2, "east": 98, "west": 88 },
+    "min_magnitude": 6.0,
+    "max_rows": 200,
+    "time_tolerance_s": 120,
+    "distance_km": 100,
+    "magnitude_tolerance": 0.7,
+    "min_coverage": 0.8
+  }
+]

@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.eggs/
+
+# Tooling
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local env / IDE
+.venv/
+.idea/
+
+# Local config (config.example.yaml is the committed template)
+config/config.yaml

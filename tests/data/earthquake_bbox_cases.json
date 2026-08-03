@@ -1,0 +1,30 @@
+[
+  {
+    "id": "atlantic",
+    "north": 44.1,
+    "south": -9.9,
+    "east": -22.4,
+    "west": 55.2
+  },
+  {
+    "id": "japan",
+    "north": 47,
+    "south": 31,
+    "east": 146,
+    "west": 129
+  },
+  {
+    "id": "australia",
+    "north": -10,
+    "south": -45,
+    "east": 154,
+    "west": 112
+  },
+  {
+    "id": "europe",
+    "north": 60,
+    "south": 35,
+    "east": 30,
+    "west": -10
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "id": "lat_above_90",
+    "lat": 95,
+    "lng": 9,
+    "status_value": 14
+  },
+  {
+    "id": "lat_below_minus_90",
+    "lat": -95,
+    "lng": 9,
+    "status_value": 14
+  },
+  {
+    "id": "lng_above_180",
+    "lat": 47.3,
+    "lng": 200,
+    "status_value": 14
+  },
+  {
+    "id": "lat_alpha",
+    "lat": "abc",
+    "lng": 9,
+    "status_value": 14
+  }
+]
