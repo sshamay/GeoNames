@@ -8,9 +8,8 @@ emits a single self-contained HTML file with:
     HITL, intent accuracy, hallucination rate)
   - the run timestamp, git commit and duration
   - pass-rate and confidence trend over all recorded runs
-  - per-check pass-rate trend over all recorded runs, plus a sent-to-judge
-    trend (how many cases each run escalated to the LLM judge) and a
-    sent-to-HITL trend (how many cases each run escalated)
+  - per-check pass-rate trend over all recorded runs, plus a combined
+    sent-to-judge-LLM &amp; sent-to-HITL trend chart
 
 Charts are inline SVG generated at build time (no CDN, no JS libraries), so the
 dashboard renders offline in any browser.
@@ -92,12 +91,8 @@ TEMPLATE = """<!DOCTYPE html>
     <div class="chartbox">__PERCHECK_SVG__</div>
   </div>
 
-  <div class="panel"><h2>Sent-to-judge LLM trend (all runs)</h2>
-    <div class="chartbox">__JUDGE_SVG__</div>
-  </div>
-
-  <div class="panel"><h2>Sent-to-HITL trend (all runs)</h2>
-    <div class="chartbox">__HITL_SVG__</div>
+  <div class="panel"><h2>Sent-to-judge LLM &amp; HITL trend (all runs)</h2>
+    <div class="chartbox">__JUDGE_HITL_SVG__</div>
   </div>
     </div>
 
@@ -119,10 +114,8 @@ TEMPLATE = """<!DOCTYPE html>
            <dd>Golden-anchor cases that were escalated to the LLM-as-a-Judge (P6) because the cheap deterministic and semantic layers could not decide. Cases with an <code>llm_judge</code> check in their evaluation results are counted here.</dd>
           <dt>Per-check pass rate</dt>
           <dd>One line per quality gate (<code>content_rules</code>, <code>agent_logic</code>, <code>hallucination_check</code>, <code>expected_outcome</code>) across all runs: how often each gate passed. Runs before a gate existed show gaps.</dd>
-           <dt>Sent-to-HITL trend</dt>
-           <dd>How many golden-anchor cases were escalated to human-in-the-loop review (action <code>ESCALATE_TO_HITL</code>) in each run. Runs before this KPI existed show gaps.</dd>
-           <dt>Sent-to-judge LLM trend</dt>
-           <dd>How many golden-anchor cases were escalated to the LLM-as-a-Judge (P6) in each run — i.e. cases where the deterministic and semantic layers could not decide and the judge was called. Runs before the judge was configured show gaps.</dd>
+            <dt>Sent-to-judge LLM &amp; HITL trend</dt>
+            <dd>Combined chart showing how many golden-anchor cases were escalated to the LLM-as-a-Judge (P6) and to human-in-the-loop review across all runs. Runs before either KPI existed show gaps.</dd>
           <dt>Trend charts</dt>
           <dd>One point per pytest session read from <code>history.jsonl</code>: pass rate and mean confidence over time. Runs before these KPIs existed show gaps.</dd>
           <dt>Legend</dt>
@@ -340,21 +333,18 @@ def render(report_dir: str, out_path: str) -> str:
     )
     percheck_svg = line_chart_svg(data["perCheckTrend"]["passRate"], data["trend"]["labels"])
 
-    hitl_values = [v for v in data["trend"]["hitl"] if v is not None]
-    hitl_max = max(hitl_values) if hitl_values else 1
-    hitl_svg = line_chart_svg(
-        [{"label": "sent to hitl", "color": "#fbbf24", "values": data["trend"]["hitl"]}],
-        data["trend"]["labels"],
-        vmax=hitl_max,
-        value_format="int",
-    )
-
     judge_values = [v for v in data["trend"]["judge"] if v is not None]
     judge_max = max(judge_values) if judge_values else 1
-    judge_svg = line_chart_svg(
-        [{"label": "sent to judge LLM", "color": "#c084fc", "values": data["trend"]["judge"]}],
+    hitl_values = [v for v in data["trend"]["hitl"] if v is not None]
+    hitl_max = max(hitl_values) if hitl_values else 1
+    combined_max = max(judge_max, hitl_max)
+    combined_svg = line_chart_svg(
+        [
+            {"label": "sent to judge LLM", "color": "#c084fc", "values": data["trend"]["judge"]},
+            {"label": "sent to HITL", "color": "#fbbf24", "values": data["trend"]["hitl"]},
+        ],
         data["trend"]["labels"],
-        vmax=judge_max,
+        vmax=combined_max,
         value_format="int",
     )
 
@@ -362,8 +352,7 @@ def render(report_dir: str, out_path: str) -> str:
         TEMPLATE
         .replace("__TREND_SVG__", trend_svg)
         .replace("__PERCHECK_SVG__", percheck_svg)
-        .replace("__JUDGE_SVG__", judge_svg)
-        .replace("__HITL_SVG__", hitl_svg)
+        .replace("__JUDGE_HITL_SVG__", combined_svg)
         .replace("__AQUA_DATA__", json.dumps(data))
     )
     with open(out_path, "w", encoding="utf-8") as fh:
