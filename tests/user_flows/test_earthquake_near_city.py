@@ -17,7 +17,7 @@ import pytest
 
 from test_utils.earthquake_city_flow import strongest_earthquake_near_city
 from geonames.models import Earthquake, Toponym
-from test_utils.test_data import load_cases
+from test_utils.aqua_test_data import load_cases
 
 CASES = load_cases("earthquake_city_cases.json")
 
