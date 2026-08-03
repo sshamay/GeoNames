@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render a self-contained AQuA KPI dashboard from reports/latest.json.
+"""Render a self-contained AQuA KPI dashboard from reports/latest.json + history.jsonl.
 
 Reads the AQuA run ledger written by tests/test_utils/aqua_reporting.py and
 emits a single self-contained HTML file with:
@@ -7,6 +7,8 @@ emits a single self-contained HTML file with:
   - headline KPI cards (pass rate, escape rate, confidence, counts, sent to
     HITL, intent accuracy, hallucination rate, automation trust signal)
   - the run timestamp, git commit and duration
+  - pass/escape-rate and confidence trend over all recorded runs, plus the
+    automation trust signal trend
   - per-check pass rates and average scores for the latest run
   - failed cases with reasons, coverage gaps, and the pytest suite summary
 
@@ -81,6 +83,14 @@ TEMPLATE = """<!DOCTYPE html>
     <div class="content">
   <div class="cards" id="cards"></div>
 
+  <div class="panel"><h2>Trend &mdash; pass / escape rate &amp; aggregate confidence (all runs)</h2>
+    <div class="chartbox">__TREND_SVG__</div>
+  </div>
+
+  <div class="panel"><h2>Automation trust signal (all runs)</h2>
+    <div class="chartbox">__TRUST_SVG__</div>
+  </div>
+
   <div class="grid2">
     <div class="panel"><h2>Per-check pass rate (latest run)</h2>
       <div class="chartbox">__PERCHECK_SVG__</div>
@@ -116,6 +126,8 @@ TEMPLATE = """<!DOCTYPE html>
           <dd>Golden-anchor cases whose aggregate score fell below the threshold and were escalated to human-in-the-loop review (action <code>ESCALATE_TO_HITL</code>). They also count as failures.</dd>
           <dt>Per-check pass rate / avg score</dt>
           <dd>Per quality gate (<code>content_rules</code>, <code>agent_logic</code>, <code>hallucination_check</code>, <code>expected_outcome</code>): how often each passed and its mean score across all cases in the latest run.</dd>
+          <dt>Trend charts</dt>
+          <dd>One point per pytest session read from <code>history.jsonl</code>: pass/escape rate and mean confidence over time, plus the deterministic share of the suite (the automation trust signal). Runs before these KPIs existed show gaps.</dd>
           <dt>Failed cases</dt>
           <dd>Cases where <code>is_safe = False</code>, listing the failing checks and the evaluator&rsquo;s reason (e.g. missing keyword, semantic similarity below 0.85, or reply numbers contradicting fetched data).</dd>
           <dt>Coverage gaps</dt>
@@ -140,12 +152,11 @@ const DATA = __AQUA_DATA__;
 function el(id) { return document.getElementById(id); }
 
 (function () {
-  const latest = DATA.latest;
-  const meta = latest.meta;
+  const meta = DATA.meta;
   el("meta").textContent =
     "Run " + fmtStamp(meta.generated_at) + " \\u00b7 git " + (meta.git_commit || "n/a") +
     " \\u00b7 duration " + meta.duration_seconds + "s";
-  const k = latest.kpis;
+  const k = DATA.kpis;
   const intentAcc = k.intent_accuracy || {};
   const halRate = k.hallucination_rate || {};
   const trust = k.automation_trust_signal || {};
@@ -226,6 +237,23 @@ def _load_json(path: str) -> Any:
         return json.load(fh)
 
 
+def _load_history(report_dir: str) -> List[Dict[str, Any]]:
+    path = os.path.join(report_dir, "history.jsonl")
+    if not os.path.exists(path):
+        return []
+    runs = []
+    with open(path, "r", encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if line:
+                runs.append(json.loads(line))
+    return runs
+
+
+def _short_label(iso: str) -> str:
+    return iso[11:19] if len(iso) >= 19 else iso
+
+
 # ------------------------------------------------------------------- SVG charts
 
 def _axis_grid(pad_l: int, width: int, pad_r: int, pad_t: int, inner_h: int) -> List[str]:
@@ -241,6 +269,64 @@ def _axis_grid(pad_l: int, width: int, pad_r: int, pad_t: int, inner_h: int) -> 
             f'text-anchor="end">{int(frac * 100)}%</text>'
         )
     return parts
+
+
+def line_chart_svg(
+    series: List[Dict[str, Any]],
+    labels: List[str],
+    width: int = 600,
+    height: int = 280,
+) -> str:
+    """Multi-series line/area chart with value-scaled y axis (0..1)."""
+    pad_l, pad_r, pad_t, pad_b = 44, 10, 14, 30
+    inner_w = width - pad_l - pad_r
+    inner_h = height - pad_t - pad_b
+    n = len(labels)
+
+    def _x(i: int) -> float:
+        return pad_l + inner_w * (i / max(n - 1, 1))
+
+    def _y(v: float) -> float:
+        return pad_t + inner_h * (1.0 - min(max(v, 0.0), 1.0))
+
+    parts = [
+        f'<svg viewBox="0 0 {width} {height}" xmlns="http://www.w3.org/2000/svg">'
+    ]
+    parts.extend(_axis_grid(pad_l, width, pad_r, pad_t, inner_h))
+
+    step = max(n // 10, 1)
+    for i in range(0, n, step):
+        parts.append(
+            f'<text x="{_x(i):.1f}" y="{height - 10}" fill="#94a3b8" font-size="9" '
+            f'text-anchor="middle">{html.escape(labels[i])}</text>'
+        )
+
+    for s in series:
+        points = []
+        prev: Optional[float] = None
+        for i, v in enumerate(s["values"]):
+            if v is None:
+                v = prev
+            else:
+                prev = v
+            if v is None:
+                continue
+            points.append(f"{_x(i):.1f},{_y(v):.1f}")
+        if points:
+            parts.append(
+                f'<polyline points="{" ".join(points)}" fill="none" '
+                f'stroke="{s["color"]}" stroke-width="2"/>'
+            )
+
+    legend = "".join(
+        f'<rect x="{pad_l + i * 130}" y="{height - 22}" width="10" height="10" fill="{s["color"]}"/>'
+        f'<text x="{pad_l + i * 130 + 14}" y="{height - 13}" fill="#e2e8f0" font-size="11">'
+        f'{html.escape(s["label"])}</text>'
+        for i, s in enumerate(series)
+    )
+    parts.append(legend)
+    parts.append("</svg>")
+    return "".join(parts)
 
 
 def bar_chart_svg(
@@ -289,6 +375,17 @@ def _build_data(report_dir: str) -> Dict[str, Any]:
     kpis = latest.get("kpis", {})
     per_check = kpis.get("per_check", {})
 
+    history = _load_history(report_dir)
+    trend = {
+        "labels": [_short_label(r.get("generated_at", "")) for r in history],
+        "passRate": [r.get("kpis", {}).get("pass_rate") for r in history],
+        "escapeRate": [r.get("kpis", {}).get("escape_rate") for r in history],
+        "confidence": [r.get("kpis", {}).get("aggregate_confidence", {}).get("mean")
+                       for r in history],
+        "trust": [r.get("kpis", {}).get("automation_trust_signal", {}).get("rate")
+                  for r in history],
+    }
+
     return {
         "meta": {
             "generated_at": latest.get("generated_at"),
@@ -296,6 +393,7 @@ def _build_data(report_dir: str) -> Dict[str, Any]:
             "duration_seconds": latest.get("duration_seconds"),
         },
         "kpis": kpis,
+        "trend": trend,
         "perCheck": {
             "names": sorted(per_check),
             "passRate": [per_check[n].get("pass_rate") for n in sorted(per_check)],
@@ -310,6 +408,20 @@ def _build_data(report_dir: str) -> Dict[str, Any]:
 def render(report_dir: str, out_path: str) -> str:
     data = _build_data(report_dir)
 
+    trend_svg = line_chart_svg(
+        [
+            {"label": "pass rate", "color": "#4ade80", "values": data["trend"]["passRate"]},
+            {"label": "escape rate", "color": "#f87171", "values": data["trend"]["escapeRate"]},
+            {"label": "confidence", "color": "#fbbf24", "values": data["trend"]["confidence"]},
+        ],
+        data["trend"]["labels"],
+    )
+    trust_svg = line_chart_svg(
+        [
+            {"label": "deterministic share", "color": "#c084fc", "values": data["trend"]["trust"]},
+        ],
+        data["trend"]["labels"],
+    )
     percheck_svg = bar_chart_svg(
         data["perCheck"]["names"], data["perCheck"]["passRate"], "#4ade80"
     )
@@ -319,6 +431,8 @@ def render(report_dir: str, out_path: str) -> str:
 
     html_out = (
         TEMPLATE
+        .replace("__TREND_SVG__", trend_svg)
+        .replace("__TRUST_SVG__", trust_svg)
         .replace("__PERCHECK_SVG__", percheck_svg)
         .replace("__PERCHECK_SCORE_SVG__", percheck_score_svg)
         .replace("__AQUA_DATA__", json.dumps(data))
