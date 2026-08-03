@@ -1,9 +1,9 @@
 {
   "report_type": "aqua_golden_anchor_kpis",
-  "generated_at": "2026-08-03T16:04:08.855999+00:00",
-  "git_commit": "0b2acf4",
+  "generated_at": "2026-08-03T16:04:36.998866+00:00",
+  "git_commit": "3c40dd0",
   "mutation_id": null,
-  "duration_seconds": 16.587,
+  "duration_seconds": 20.707,
   "kpis": {
     "totals": {
       "total": 18,
@@ -139,8 +139,8 @@
     }
   },
   "pytest_suite": {
-    "passed": 98,
-    "failed": 9,
+    "passed": 100,
+    "failed": 7,
     "skipped": 0,
     "errors": 0,
     "deterministic_tests": 61,
@@ -152,9 +152,7 @@
       "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-013]",
       "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-014]",
       "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-015]",
-      "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-018]",
-      "tests/services/test_earthquakes.py::test_earthquakes_response_schema[europe]",
-      "tests/services/test_find_nearby.py::test_find_nearby_rejects_invalid_coords[lat_below_minus_90]"
+      "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-018]"
     ]
   }
 }
