@@ -8,8 +8,9 @@ emits a single self-contained HTML file with:
     HITL, intent accuracy, hallucination rate)
   - the run timestamp, git commit and duration
   - pass-rate and confidence trend over all recorded runs
-  - per-check pass-rate trend over all recorded runs, plus a sent-to-HITL
-    trend (how many cases each run escalated)
+  - per-check pass-rate trend over all recorded runs, plus a sent-to-judge
+    trend (how many cases each run escalated to the LLM judge) and a
+    sent-to-HITL trend (how many cases each run escalated)
 
 Charts are inline SVG generated at build time (no CDN, no JS libraries), so the
 dashboard renders offline in any browser.
@@ -36,7 +37,8 @@ TEMPLATE = """<!DOCTYPE html>
 <title>AQuA Golden Anchor Dashboard</title>
 <style>
   :root { --bg:#0f172a; --card:#1e293b; --line:#334155; --text:#e2e8f0;
-          --muted:#94a3b8; --green:#4ade80; --red:#f87171; --amber:#fbbf24; }
+          --muted:#94a3b8; --green:#4ade80; --red:#f87171; --amber:#fbbf24;
+          --purple:#c084fc; }
   * { box-sizing:border-box; }
   body { margin:0; font-family:-apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
          background:var(--bg); color:var(--text); }
@@ -90,6 +92,10 @@ TEMPLATE = """<!DOCTYPE html>
     <div class="chartbox">__PERCHECK_SVG__</div>
   </div>
 
+  <div class="panel"><h2>Sent-to-judge LLM trend (all runs)</h2>
+    <div class="chartbox">__JUDGE_SVG__</div>
+  </div>
+
   <div class="panel"><h2>Sent-to-HITL trend (all runs)</h2>
     <div class="chartbox">__HITL_SVG__</div>
   </div>
@@ -107,12 +113,16 @@ TEMPLATE = """<!DOCTYPE html>
           <dd>Share that failed &mdash; defects the quality gate caught: <code>failed &divide; (passed + failed)</code>.</dd>
           <dt>Confidence</dt>
           <dd>Mean <code>aggregate_score</code> across the evaluated golden-anchor cases; each case&rsquo;s score is the average of its check scores.</dd>
-          <dt>Sent to HITL</dt>
-          <dd>Golden-anchor cases whose aggregate score fell below the threshold and were escalated to human-in-the-loop review (action <code>ESCALATE_TO_HITL</code>). They also count as failures.</dd>
+           <dt>Sent to HITL</dt>
+           <dd>Golden-anchor cases whose aggregate score fell below the threshold and were escalated to human-in-the-loop review (action <code>ESCALATE_TO_HITL</code>). They also count as failures.</dd>
+           <dt>Sent to judge LLM</dt>
+           <dd>Golden-anchor cases that were escalated to the LLM-as-a-Judge (P6) because the cheap deterministic and semantic layers could not decide. Cases with an <code>llm_judge</code> check in their evaluation results are counted here.</dd>
           <dt>Per-check pass rate</dt>
           <dd>One line per quality gate (<code>content_rules</code>, <code>agent_logic</code>, <code>hallucination_check</code>, <code>expected_outcome</code>) across all runs: how often each gate passed. Runs before a gate existed show gaps.</dd>
-          <dt>Sent-to-HITL trend</dt>
-          <dd>How many golden-anchor cases were escalated to human-in-the-loop review (action <code>ESCALATE_TO_HITL</code>) in each run. Runs before this KPI existed show gaps.</dd>
+           <dt>Sent-to-HITL trend</dt>
+           <dd>How many golden-anchor cases were escalated to human-in-the-loop review (action <code>ESCALATE_TO_HITL</code>) in each run. Runs before this KPI existed show gaps.</dd>
+           <dt>Sent-to-judge LLM trend</dt>
+           <dd>How many golden-anchor cases were escalated to the LLM-as-a-Judge (P6) in each run — i.e. cases where the deterministic and semantic layers could not decide and the judge was called. Runs before the judge was configured show gaps.</dd>
           <dt>Trend charts</dt>
           <dd>One point per pytest session read from <code>history.jsonl</code>: pass rate and mean confidence over time. Runs before these KPIs existed show gaps.</dd>
           <dt>Legend</dt>
@@ -141,11 +151,13 @@ function el(id) { return document.getElementById(id); }
   const intentAcc = k.intent_accuracy || {};
   const halRate = k.hallucination_rate || {};
   const hitl = k.sent_to_hitl || {};
+  const judge = k.sent_to_judge || {};
   const cards = [
     { label: "pass rate", value: fmtPct(k.pass_rate), cls: "green" },
     { label: "escape rate", value: fmtPct(k.escape_rate), cls: "red" },
     { label: "confidence mean", value: fmtNum(k.aggregate_confidence.mean), cls: "" },
     { label: "sent to hitl", value: hitl.count == null ? "n/a" : hitl.count, cls: hitl.count > 0 ? "amber" : "" },
+    { label: "sent to judge LLM", value: judge.count == null ? "n/a" : judge.count, cls: judge.count > 0 ? "purple" : "" },
     { label: "intent accuracy", value: fmtPct(intentAcc.rate), cls: "" },
     { label: "hallucination rate", value: fmtPct(halRate.rate), cls: halRate.rate > 0 ? "red" : "" },
   ];
@@ -285,6 +297,8 @@ def _build_data(report_dir: str) -> Dict[str, Any]:
                        for r in history],
         "hitl": [r.get("kpis", {}).get("sent_to_hitl", {}).get("count")
                  for r in history],
+        "judge": [r.get("kpis", {}).get("sent_to_judge", {}).get("count")
+                  for r in history],
     }
 
     # Per-check series across all runs (one line per quality gate). Runs before
@@ -335,10 +349,20 @@ def render(report_dir: str, out_path: str) -> str:
         value_format="int",
     )
 
+    judge_values = [v for v in data["trend"]["judge"] if v is not None]
+    judge_max = max(judge_values) if judge_values else 1
+    judge_svg = line_chart_svg(
+        [{"label": "sent to judge LLM", "color": "#c084fc", "values": data["trend"]["judge"]}],
+        data["trend"]["labels"],
+        vmax=judge_max,
+        value_format="int",
+    )
+
     html_out = (
         TEMPLATE
         .replace("__TREND_SVG__", trend_svg)
         .replace("__PERCHECK_SVG__", percheck_svg)
+        .replace("__JUDGE_SVG__", judge_svg)
         .replace("__HITL_SVG__", hitl_svg)
         .replace("__AQUA_DATA__", json.dumps(data))
     )

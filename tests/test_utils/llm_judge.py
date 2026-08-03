@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 import re
+import time
 from typing import Any, Callable, Dict, List, Optional
 
 import requests
@@ -87,7 +88,7 @@ def _extract_verdict(content: str) -> Dict[str, Any]:
             return {"score": float(payload["score"]), "reason": str(payload.get("reason", ""))}
         except (KeyError, TypeError, ValueError):
             pass
-        return {"score": 0.0, "reason": _UNPARSEABLE_PREFIX + " " + text[:200]}
+    return {"score": 0.0, "reason": _UNPARSEABLE_PREFIX + " " + text[:200]}
 
 
 class _OpenAIJudge:

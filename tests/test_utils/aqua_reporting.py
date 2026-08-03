@@ -153,7 +153,12 @@ class AQuARunLedger:
         totals["evaluated"] = totals["passed"] + totals["failed"]
         evaluated = totals["evaluated"]
         hitl_count = sum(1 for e in self.entries if e.get("action") == "ESCALATE_TO_HITL")
+        judge_count = sum(
+            1 for e in self.entries
+            if any(c.get("check_name") == "llm_judge" for c in e.get("checks") or [])
+        )
         totals["hitl"] = hitl_count
+        totals["sent_to_judge"] = judge_count
 
         # Bool-or-None project KPIs recorded per case (None = not applicable).
         metric_rates = {}
@@ -178,6 +183,10 @@ class AQuARunLedger:
             "sent_to_hitl": {
                 "count": hitl_count,
                 "rate": (hitl_count / evaluated) if evaluated else None,
+            },
+            "sent_to_judge": {
+                "count": judge_count,
+                "rate": (judge_count / evaluated) if evaluated else None,
             },
             "automation_trust_signal": {
                 "deterministic": self.deterministic_count,
