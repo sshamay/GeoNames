@@ -1,6 +1,6 @@
-"""AQuA P6 LLM-as-a-Judge client for the golden-anchor evaluation.
+"""LLM-as-a-Judge client for the golden-anchor evaluation.
 
-Implements the ``AQuAEvaluators.llm_judge`` hook signature::
+Implements the ``Evaluator.llm_judge`` hook signature::
 
     callable(ai_output, expected_outcome, retrieved_context)
         -> {"score": float (0..1), "reason": str}

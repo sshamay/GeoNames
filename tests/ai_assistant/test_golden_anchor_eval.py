@@ -16,7 +16,7 @@ To use in another project:
 
 import pytest
 
-from test_utils.aqua_evaluation import (
+from test_utils.evaluation import (
     extract_assistant_output,
     failure_summary,
     format_eval_result,
@@ -25,14 +25,14 @@ from test_utils.aqua_evaluation import (
 pytestmark = pytest.mark.ai_assistant
 
 
-def test_golden_anchor_case(ai_assistant, aqua_evaluators_class, run_ledger, case_and_id):
+def test_golden_anchor_case(ai_assistant, evaluator_class, run_ledger, case_and_id):
     """
     Generic golden anchor test: one pytest case per golden anchor entry.
     
     Requirements for fixtures:
     - ai_assistant: Must have process_user_query(input) and trace_collector.get_trace_logs()
-    - aqua_evaluators_class: AQuAEvaluators class with run_case() method
-    - run_ledger: Session-scoped AQuA run ledger (KPI reporting); records each
+    - evaluator_class: Evaluator class with run_case() method
+    - run_ledger: Session-scoped evaluation run ledger (KPI reporting); records each
       case's eval result before assertions so failing cases are captured too.
     - case_and_id: Golden anchor case dict with case_id, user_input, etc.
     
@@ -61,8 +61,8 @@ def test_golden_anchor_case(ai_assistant, aqua_evaluators_class, run_ledger, cas
     if case.get("simulated_output"):
         ai_output = case["simulated_output"]
     
-    # Run AQuA evaluators (includes the hallucination gate + KPI metrics)
-    eval_result = aqua_evaluators_class.run_case(case, ai_output, trace_logs)
+    # Run evaluators (includes the hallucination gate + KPI metrics)
+    eval_result = evaluator_class.run_case(case, ai_output, trace_logs)
     
     # Record the run outcome for KPI reporting (before assertion so failing
     # cases are captured too). Per-case KPI metrics come from the evaluator.

@@ -1,11 +1,11 @@
 """
-AQuA Run KPIs: measure and log golden anchor run success.
+Run KPIs: measure and log golden anchor run success.
 
 Collects one entry per golden anchor case evaluated during a pytest session,
 computes reporting KPIs (pass rate, escape rate, aggregate confidence,
 per-check pass rates, coverage gaps) and writes:
 
-    reports/aqua_run_<timestamp>.json   full run detail (incl. per-case entries)
+    reports/evaluation_run_<timestamp>.json   full run detail (incl. per-case entries)
     reports/latest.json                 same content, stable name for dashboards
     reports/history.jsonl               one summary line appended per run (trend)
 
@@ -22,7 +22,7 @@ from datetime import datetime, timezone
 
 REPORT_DIR = os.environ.get("AQUA_REPORT_DIR", "reports")
 
-# AQuAEvaluators.run_case() "action" -> KPI bucket.
+# Evaluator.run_case() "action" -> KPI bucket.
 _STATUS_BY_ACTION = {
     "RELEASE": "PASSED",
     "ESCALATE_TO_HITL": "FAILED",
@@ -46,7 +46,7 @@ def _git_commit():
         return None
 
 
-class AQuARunLedger:
+class RunLedger:
     """Records per-case golden anchor results and pytest outcomes across a run."""
 
     def __init__(self, report_dir=None):
@@ -220,7 +220,7 @@ class AQuARunLedger:
     def build_report(self, mutation_id=None):
         """Full report dict: metadata + golden anchor KPIs + pytest context."""
         return {
-            "report_type": "aqua_golden_anchor_kpis",
+            "report_type": "golden_anchor_kpis",
             "generated_at": _utc_now(),
             "git_commit": self.git_commit,
             "mutation_id": mutation_id,
@@ -241,7 +241,7 @@ class AQuARunLedger:
         report = self.build_report(mutation_id)
         run_stamp = time.strftime("%Y%m%d_%H%M%S")
 
-        run_path = os.path.join(self.report_dir, f"aqua_run_{run_stamp}.json")
+        run_path = os.path.join(self.report_dir, f"evaluation_run_{run_stamp}.json")
         latest_path = os.path.join(self.report_dir, "latest.json")
         with open(run_path, "w", encoding="utf-8") as fh:
             json.dump(report, fh, indent=2)

@@ -1,9 +1,9 @@
 {
   "report_type": "aqua_golden_anchor_kpis",
-  "generated_at": "2026-08-03T17:15:13.716748+00:00",
-  "git_commit": "40e57ae",
+  "generated_at": "2026-08-03T17:25:33.068857+00:00",
+  "git_commit": "2dcda46",
   "mutation_id": null,
-  "duration_seconds": 42.069,
+  "duration_seconds": 74.94,
   "kpis": {
     "totals": {
       "total": 18,
@@ -12,7 +12,8 @@
       "coverage_gaps": 0,
       "no_tests_run": 0,
       "evaluated": 18,
-      "hitl": 7
+      "hitl": 7,
+      "sent_to_judge": 2
     },
     "pass_rate": 0.6111111111111112,
     "escape_rate": 0.3888888888888889,
@@ -32,11 +33,15 @@
       "count": 7,
       "rate": 0.3888888888888889
     },
+    "sent_to_judge": {
+      "count": 2,
+      "rate": 0.1111111111111111
+    },
     "automation_trust_signal": {
-      "deterministic": 84,
-      "probabilistic": 46,
-      "total": 130,
-      "rate": 0.6461538461538462
+      "deterministic": 0,
+      "probabilistic": 18,
+      "total": 18,
+      "rate": 0.0
     },
     "aggregate_confidence": {
       "mean": 0.9027777777777778,
@@ -51,7 +56,7 @@
         "failing_checks": [
           "llm_judge"
         ],
-        "reason": "LLM judge verdict (0.00): The retrieved context is empty and the assistant's reply directly contradicts the golden reference, which states no seismic activity was reported. The assistant hallucinated earthquake data not present in any source."
+        "reason": "LLM judge verdict (0.00): The retrieved context is empty and the golden reference states no seismic activity was reported, yet the assistant claims to have found 4 earthquakes. The reply is entirely ungrounded and directly contradicts the reference."
       },
       {
         "case_id": "GN-011",
@@ -91,7 +96,7 @@
         "failing_checks": [
           "llm_judge"
         ],
-        "reason": "LLM judge verdict (0.00): Reply invents data not in empty retrieved context and ignores the storm warning from golden reference."
+        "reason": "LLM judge verdict (0.00): Judge returned unparseable output: ```json\n{\"score\": 0.0, \"reason\": \"The retrieved context is empty, so the assistant's claim about"
       },
       {
         "case_id": "GN-018",
@@ -144,19 +149,15 @@
         "pass_rate": 0.0,
         "avg_score": 0.0
       }
-    },
-    "sent_to_judge": {
-      "count": 2,
-      "rate": 0.1111111111111111
     }
   },
   "pytest_suite": {
-    "passed": 121,
-    "failed": 9,
+    "passed": 11,
+    "failed": 7,
     "skipped": 0,
     "errors": 0,
-    "deterministic_tests": 84,
-    "probabilistic_tests": 46,
+    "deterministic_tests": 0,
+    "probabilistic_tests": 18,
     "failed_nodeids": [
       "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-005]",
       "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-011]",
@@ -164,9 +165,7 @@
       "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-013]",
       "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-014]",
       "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-015]",
-      "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-018]",
-      "tests/unit/test_llm_judge.py::test_judge_fails_closed_on_transport_error",
-      "tests/unit/test_llm_judge.py::test_extract_verdict_fails_closed_on_garbage"
+      "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-018]"
     ]
   }
 }
