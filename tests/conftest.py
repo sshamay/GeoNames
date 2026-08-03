@@ -14,7 +14,7 @@ from geonames.clients import GeoNamesClient
 from geonames.config_loader import Settings, load_config
 from geonames.services import EarthquakesAPI, WeatherAPI
 from test_utils.find_nearby import FindNearbyAPI
-from test_utils.kpi_metrics import claim_mismatches
+from test_utils.aqua_kpi_metrics import claim_mismatches
 
 
 @pytest.fixture(scope="session")
@@ -103,7 +103,7 @@ def _load_aqua_evaluators(settings=None):
     stays None (fully offline) when disabled or underconfigured.
     """
     from test_utils.aqua_evaluation import AQuAEvaluators
-    from test_utils.llm_judge import build_llm_judge
+    from test_utils.aqua_llm_judge import build_llm_judge
 
     AQuAEvaluators.hallucination_extractor = staticmethod(claim_mismatches)
     AQuAEvaluators.llm_judge = build_llm_judge(settings) if settings is not None else None

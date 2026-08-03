@@ -1,9 +1,9 @@
-"""Unit tests for the AQuA P6 LLM-as-a-Judge client (tests/test_utils/llm_judge.py)."""
+"""Unit tests for the AQuA P6 LLM-as-a-Judge client (tests/test_utils/aqua_llm_judge.py)."""
 
 import pytest
 
 from geonames.config_loader import Settings
-from test_utils.llm_judge import _extract_verdict, build_llm_judge
+from test_utils.aqua_llm_judge import _extract_verdict, build_llm_judge
 
 
 def _settings(**overrides):
