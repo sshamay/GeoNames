@@ -118,7 +118,7 @@ TEMPLATE = """<!DOCTYPE html>
            <dt>Sent to judge LLM</dt>
            <dd>Golden-anchor cases that were escalated to the LLM-as-a-Judge (P6) because the cheap deterministic and semantic layers could not decide. Cases with an <code>llm_judge</code> check in their evaluation results are counted here.</dd>
           <dt>Per-check pass rate</dt>
-          <dd>One line per quality gate (<code>content_rules</code>, <code>agent_logic</code>, <code>hallucination_check</code>, <code>expected_outcome</code>) across all runs: how often each gate passed. Runs before a gate existed show gaps.</dd>
+           <dd>One line per quality gate (<code>content_rules</code>, <code>agent_logic</code>, <code>hallucination_check</code>, <code>expected_outcome</code>) across all runs: how often each gate passed. The <code>llm_judge</code> gate is shown in the dedicated sent-to-judge chart below. Runs before a gate existed show gaps.</dd>
             <dt>Sent-to-judge LLM &amp; HITL trend</dt>
             <dd>Combined chart showing how many golden-anchor cases were escalated to the LLM-as-a-Judge (P6) and to human-in-the-loop review across all runs. Runs before either KPI existed show gaps.</dd>
           <dt>Trend charts</dt>
@@ -301,9 +301,12 @@ def _build_data(report_dir: str) -> Dict[str, Any]:
 
     # Per-check series across all runs (one line per quality gate). Runs before
     # a gate existed carry None, which line_chart_svg renders as a gap.
+    # Exclude llm_judge: its trend is already shown in the dedicated
+    # "Sent-to-judge LLM & HITL trend" chart above.
     check_names = sorted({
         name for r in history
         for name in (r.get("kpis", {}).get("per_check") or {})
+        if name != "llm_judge"
     })
     per_check_trend = {"passRate": []}
     for i, name in enumerate(check_names):
