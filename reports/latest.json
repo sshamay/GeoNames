@@ -1,9 +1,9 @@
 {
   "report_type": "aqua_golden_anchor_kpis",
-  "generated_at": "2026-08-03T16:04:36.998866+00:00",
-  "git_commit": "3c40dd0",
+  "generated_at": "2026-08-03T16:11:27.383422+00:00",
+  "git_commit": "b3ca5c7",
   "mutation_id": null,
-  "duration_seconds": 20.707,
+  "duration_seconds": 14.82,
   "kpis": {
     "totals": {
       "total": 18,

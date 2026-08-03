@@ -7,8 +7,9 @@ emits a single self-contained HTML file with:
   - headline KPI cards (pass rate, escape rate, confidence mean, sent to
     HITL, intent accuracy, hallucination rate)
   - the run timestamp, git commit and duration
-  - pass/escape-rate and confidence trend over all recorded runs
-  - per-check pass rate and average-score trends over all recorded runs
+  - pass-rate and confidence trend over all recorded runs
+  - per-check pass-rate trend over all recorded runs, plus a sent-to-HITL
+    trend (how many cases each run escalated)
 
 Charts are inline SVG generated at build time (no CDN, no JS libraries), so the
 dashboard renders offline in any browser.
@@ -81,7 +82,7 @@ TEMPLATE = """<!DOCTYPE html>
     <div class="content">
   <div class="cards" id="cards"></div>
 
-  <div class="panel"><h2>Trend &mdash; pass / escape rate &amp; aggregate confidence (all runs)</h2>
+  <div class="panel"><h2>Trend &mdash; pass rate &amp; aggregate confidence (all runs)</h2>
     <div class="chartbox">__TREND_SVG__</div>
   </div>
 
@@ -89,8 +90,8 @@ TEMPLATE = """<!DOCTYPE html>
     <div class="chartbox">__PERCHECK_SVG__</div>
   </div>
 
-  <div class="panel"><h2>Per-check average score (all runs)</h2>
-    <div class="chartbox">__PERCHECK_SCORE_SVG__</div>
+  <div class="panel"><h2>Sent-to-HITL trend (all runs)</h2>
+    <div class="chartbox">__HITL_SVG__</div>
   </div>
     </div>
 
@@ -108,10 +109,12 @@ TEMPLATE = """<!DOCTYPE html>
           <dd>Mean <code>aggregate_score</code> across the evaluated golden-anchor cases; each case&rsquo;s score is the average of its check scores.</dd>
           <dt>Sent to HITL</dt>
           <dd>Golden-anchor cases whose aggregate score fell below the threshold and were escalated to human-in-the-loop review (action <code>ESCALATE_TO_HITL</code>). They also count as failures.</dd>
-          <dt>Per-check pass rate / avg score</dt>
-          <dd>One line per quality gate (<code>content_rules</code>, <code>agent_logic</code>, <code>hallucination_check</code>, <code>expected_outcome</code>) across all runs: how often each gate passed and its mean score. Runs before a gate existed show gaps.</dd>
+          <dt>Per-check pass rate</dt>
+          <dd>One line per quality gate (<code>content_rules</code>, <code>agent_logic</code>, <code>hallucination_check</code>, <code>expected_outcome</code>) across all runs: how often each gate passed. Runs before a gate existed show gaps.</dd>
+          <dt>Sent-to-HITL trend</dt>
+          <dd>How many golden-anchor cases were escalated to human-in-the-loop review (action <code>ESCALATE_TO_HITL</code>) in each run. Runs before this KPI existed show gaps.</dd>
           <dt>Trend charts</dt>
-          <dd>One point per pytest session read from <code>history.jsonl</code>: pass/escape rate and mean confidence over time. Runs before these KPIs existed show gaps.</dd>
+          <dd>One point per pytest session read from <code>history.jsonl</code>: pass rate and mean confidence over time. Runs before these KPIs existed show gaps.</dd>
           <dt>Legend</dt>
           <dd>Each line&rsquo;s label and color are shown in the legend above the chart, in the same order as the lines.</dd>
           <dt>Intent accuracy</dt>
@@ -187,28 +190,31 @@ def _short_label(iso: str) -> str:
 
 # ------------------------------------------------------------------- SVG charts
 
-def _axis_grid(pad_l: int, width: int, pad_r: int, pad_t: int, inner_h: int) -> List[str]:
+def _axis_grid(pad_l, width, pad_r, pad_t, inner_h, vmax=1.0, value_format="pct"):
     parts = []
     for frac in (0.0, 0.25, 0.5, 0.75, 1.0):
         gy = pad_t + inner_h * (1.0 - frac)
+        label = f"{int(frac * vmax)}" if value_format == "int" else f"{int(frac * 100)}%"
         parts.append(
             f'<line x1="{pad_l}" y1="{gy:.1f}" x2="{width - pad_r}" y2="{gy:.1f}" '
             f'stroke="#334155" stroke-width="1"/>'
         )
         parts.append(
             f'<text x="{pad_l - 6}" y="{gy + 4:.1f}" fill="#94a3b8" font-size="10" '
-            f'text-anchor="end">{int(frac * 100)}%</text>'
+            f'text-anchor="end">{label}</text>'
         )
     return parts
 
 
 def line_chart_svg(
-    series: List[Dict[str, Any]],
-    labels: List[str],
-    width: int = 600,
-    height: int = 280,
-) -> str:
-    """Multi-series line/area chart with value-scaled y axis (0..1)."""
+    series,
+    labels,
+    width=600,
+    height=280,
+    vmax=1.0,
+    value_format="pct",
+):
+    """Multi-series line/area chart; y axis spans 0..vmax (pct or int labels)."""
     pad_l, pad_r, pad_t, pad_b = 44, 10, 36, 22
     inner_w = width - pad_l - pad_r
     inner_h = height - pad_t - pad_b
@@ -218,12 +224,12 @@ def line_chart_svg(
         return pad_l + inner_w * (i / max(n - 1, 1))
 
     def _y(v: float) -> float:
-        return pad_t + inner_h * (1.0 - min(max(v, 0.0), 1.0))
+        return pad_t + inner_h * (1.0 - min(max(v, 0.0), vmax) / vmax)
 
     parts = [
         f'<svg viewBox="0 0 {width} {height}" xmlns="http://www.w3.org/2000/svg">'
     ]
-    parts.extend(_axis_grid(pad_l, width, pad_r, pad_t, inner_h))
+    parts.extend(_axis_grid(pad_l, width, pad_r, pad_t, inner_h, vmax, value_format))
 
     step = max(n // 10, 1)
     for i in range(0, n, step):
@@ -275,9 +281,10 @@ def _build_data(report_dir: str) -> Dict[str, Any]:
     trend = {
         "labels": labels,
         "passRate": [r.get("kpis", {}).get("pass_rate") for r in history],
-        "escapeRate": [r.get("kpis", {}).get("escape_rate") for r in history],
         "confidence": [r.get("kpis", {}).get("aggregate_confidence", {}).get("mean")
                        for r in history],
+        "hitl": [r.get("kpis", {}).get("sent_to_hitl", {}).get("count")
+                 for r in history],
     }
 
     # Per-check series across all runs (one line per quality gate). Runs before
@@ -286,16 +293,14 @@ def _build_data(report_dir: str) -> Dict[str, Any]:
         name for r in history
         for name in (r.get("kpis", {}).get("per_check") or {})
     })
-    per_check_trend = {"passRate": [], "avgScore": []}
+    per_check_trend = {"passRate": []}
     for i, name in enumerate(check_names):
         color = _PER_CHECK_PALETTE[i % len(_PER_CHECK_PALETTE)]
-        pass_vals, avg_vals = [], []
+        pass_vals = []
         for r in history:
             stat = (r.get("kpis", {}).get("per_check") or {}).get(name) or {}
             pass_vals.append(stat.get("pass_rate"))
-            avg_vals.append(stat.get("avg_score"))
         per_check_trend["passRate"].append({"label": name, "color": color, "values": pass_vals})
-        per_check_trend["avgScore"].append({"label": name, "color": color, "values": avg_vals})
 
     return {
         "meta": {
@@ -315,19 +320,26 @@ def render(report_dir: str, out_path: str) -> str:
     trend_svg = line_chart_svg(
         [
             {"label": "pass rate", "color": "#4ade80", "values": data["trend"]["passRate"]},
-            {"label": "escape rate", "color": "#f87171", "values": data["trend"]["escapeRate"]},
             {"label": "confidence", "color": "#fbbf24", "values": data["trend"]["confidence"]},
         ],
         data["trend"]["labels"],
     )
     percheck_svg = line_chart_svg(data["perCheckTrend"]["passRate"], data["trend"]["labels"])
-    percheck_score_svg = line_chart_svg(data["perCheckTrend"]["avgScore"], data["trend"]["labels"])
+
+    hitl_values = [v for v in data["trend"]["hitl"] if v is not None]
+    hitl_max = max(hitl_values) if hitl_values else 1
+    hitl_svg = line_chart_svg(
+        [{"label": "sent to hitl", "color": "#fbbf24", "values": data["trend"]["hitl"]}],
+        data["trend"]["labels"],
+        vmax=hitl_max,
+        value_format="int",
+    )
 
     html_out = (
         TEMPLATE
         .replace("__TREND_SVG__", trend_svg)
         .replace("__PERCHECK_SVG__", percheck_svg)
-        .replace("__PERCHECK_SCORE_SVG__", percheck_score_svg)
+        .replace("__HITL_SVG__", hitl_svg)
         .replace("__AQUA_DATA__", json.dumps(data))
     )
     with open(out_path, "w", encoding="utf-8") as fh:
