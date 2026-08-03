@@ -5,12 +5,10 @@ Reads the AQuA run ledger written by tests/test_utils/aqua_reporting.py and
 emits a single self-contained HTML file with:
 
   - headline KPI cards (pass rate, escape rate, confidence mean, sent to
-    HITL, intent accuracy, hallucination rate, automation trust signal)
+    HITL, intent accuracy, hallucination rate)
   - the run timestamp, git commit and duration
-  - pass/escape-rate and confidence trend over all recorded runs, plus the
-    automation trust signal trend
+  - pass/escape-rate and confidence trend over all recorded runs
   - per-check pass rate and average-score trends over all recorded runs
-  - failed cases with reasons
 
 Charts are inline SVG generated at build time (no CDN, no JS libraries), so the
 dashboard renders offline in any browser.
@@ -87,10 +85,6 @@ TEMPLATE = """<!DOCTYPE html>
     <div class="chartbox">__TREND_SVG__</div>
   </div>
 
-  <div class="panel"><h2>Automation trust signal (all runs)</h2>
-    <div class="chartbox">__TRUST_SVG__</div>
-  </div>
-
   <div class="grid2">
     <div class="panel"><h2>Per-check pass rate (all runs)</h2>
       <div class="chartbox">__PERCHECK_SVG__</div>
@@ -98,9 +92,6 @@ TEMPLATE = """<!DOCTYPE html>
     <div class="panel"><h2>Per-check average score (all runs)</h2>
       <div class="chartbox">__PERCHECK_SCORE_SVG__</div>
     </div>
-  </div>
-
-  <div class="panel" id="failedPanel"><h2>Failed cases</h2></div>
     </div>
 
     <aside class="sidebar">
@@ -120,15 +111,13 @@ TEMPLATE = """<!DOCTYPE html>
           <dt>Per-check pass rate / avg score</dt>
           <dd>One line per quality gate (<code>content_rules</code>, <code>agent_logic</code>, <code>hallucination_check</code>, <code>expected_outcome</code>) across all runs: how often each gate passed and its mean score. Runs before a gate existed show gaps.</dd>
           <dt>Trend charts</dt>
-          <dd>One point per pytest session read from <code>history.jsonl</code>: pass/escape rate and mean confidence over time, plus the deterministic share of the suite (the automation trust signal). Runs before these KPIs existed show gaps.</dd>
-          <dt>Failed cases</dt>
-          <dd>Cases where <code>is_safe = False</code>, listing the failing checks and the evaluator&rsquo;s reason (e.g. missing keyword, semantic similarity below 0.85, or reply numbers contradicting fetched data).</dd>
+          <dd>One point per pytest session read from <code>history.jsonl</code>: pass/escape rate and mean confidence over time. Runs before these KPIs existed show gaps.</dd>
+          <dt>Legend</dt>
+          <dd>Each line&rsquo;s label and color are shown in the legend above the chart, in the same order as the lines.</dd>
           <dt>Intent accuracy</dt>
           <dd>Share of golden-anchor cases whose executed API calls exactly match the case&rsquo;s <code>required_tools</code>. Cases that declare no tool requirement (e.g. the greeting fallback) are excluded from the denominator.</dd>
           <dt>Hallucination rate</dt>
           <dd>Share of cases where a number in the assistant&rsquo;s reply (earthquake count, strongest magnitude, weather-station count) does not match the raw JSON the fetchers returned, read from the trace&rsquo;s <code>tool_outputs</code>. Cases where nothing was fetched are excluded.</dd>
-          <dt>Automation trust signal</dt>
-          <dd>Share of the suite classified as deterministic (offline <code>unit</code> tests) vs probabilistic (live API, user flows, golden anchors). Higher means more of the suite is reproducible offline.</dd>
         </dl>
       </div>
     </aside>
@@ -148,7 +137,6 @@ function el(id) { return document.getElementById(id); }
   const k = DATA.kpis;
   const intentAcc = k.intent_accuracy || {};
   const halRate = k.hallucination_rate || {};
-  const trust = k.automation_trust_signal || {};
   const hitl = k.sent_to_hitl || {};
   const cards = [
     { label: "pass rate", value: fmtPct(k.pass_rate), cls: "green" },
@@ -157,40 +145,17 @@ function el(id) { return document.getElementById(id); }
     { label: "sent to hitl", value: hitl.count == null ? "n/a" : hitl.count, cls: hitl.count > 0 ? "amber" : "" },
     { label: "intent accuracy", value: fmtPct(intentAcc.rate), cls: "" },
     { label: "hallucination rate", value: fmtPct(halRate.rate), cls: halRate.rate > 0 ? "red" : "" },
-    { label: "automation trust", value: fmtPct(trust.rate), cls: "green" },
   ];
   el("cards").innerHTML = cards.map(c =>
     '<div class="card"><div class="value ' + c.cls + '">' + c.value + '</div>' +
     '<div class="label">' + c.label + '</div></div>').join("");
 })();
 
-function rows(items, cols) {
-  if (!items.length) return '<p class="muted">None</p>';
-  const head = "<tr>" + cols.map(c => "<th>" + c.label + "</th>").join("") + "</tr>";
-  const body = items.map(it => "<tr>" + cols.map(c => "<td>" + c.render(it) + "</td>").join("") + "</tr>").join("");
-  return "<table>" + head + body + "</table>";
-}
-
-el("failedPanel").innerHTML =
-  "<h2>Failed cases</h2>" +
-  rows(DATA.failedCases, [
-    { label: "case", render: c => '<code>' + c.case_id + "</code>" },
-    { label: "score", render: c => fmtNum(c.aggregate_score) },
-    { label: "failing checks", render: c => (c.failing_checks || []).map(ch =>
-        '<span class="pill fail">' + ch + "</span>").join(" ") || "\\u2014" },
-    { label: "reason", render: c => esc(c.reason) },
-  ]);
-
 function fmtPct(v) { return v == null ? "n/a" : (v * 100).toFixed(1) + "%"; }
 function fmtNum(v) { return v == null ? "n/a" : Number(v).toFixed(3); }
 function fmtStamp(iso) {
   if (!iso) return "n/a";
   return new Date(iso).toISOString().replace("T", " ").replace(/\.\d+Z$/, " UTC");
-}
-function esc(s) {
-  const d = document.createElement("div");
-  d.textContent = s == null ? "" : String(s);
-  return d.innerHTML;
 }
 </script>
 </body>
@@ -244,7 +209,7 @@ def line_chart_svg(
     height: int = 280,
 ) -> str:
     """Multi-series line/area chart with value-scaled y axis (0..1)."""
-    pad_l, pad_r, pad_t, pad_b = 44, 10, 14, 30
+    pad_l, pad_r, pad_t, pad_b = 44, 10, 36, 22
     inner_w = width - pad_l - pad_r
     inner_h = height - pad_t - pad_b
     n = len(labels)
@@ -285,8 +250,8 @@ def line_chart_svg(
             )
 
     legend = "".join(
-        f'<rect x="{pad_l + i * 130}" y="{height - 22}" width="10" height="10" fill="{s["color"]}"/>'
-        f'<text x="{pad_l + i * 130 + 14}" y="{height - 13}" fill="#e2e8f0" font-size="11">'
+        f'<rect x="{pad_l + i * 140}" y="12" width="10" height="10" fill="{s["color"]}"/>'
+        f'<text x="{pad_l + i * 140 + 14}" y="21" fill="#e2e8f0" font-size="11">'
         f'{html.escape(s["label"])}</text>'
         for i, s in enumerate(series)
     )
@@ -313,8 +278,6 @@ def _build_data(report_dir: str) -> Dict[str, Any]:
         "escapeRate": [r.get("kpis", {}).get("escape_rate") for r in history],
         "confidence": [r.get("kpis", {}).get("aggregate_confidence", {}).get("mean")
                        for r in history],
-        "trust": [r.get("kpis", {}).get("automation_trust_signal", {}).get("rate")
-                  for r in history],
     }
 
     # Per-check series across all runs (one line per quality gate). Runs before
@@ -343,7 +306,6 @@ def _build_data(report_dir: str) -> Dict[str, Any]:
         "kpis": kpis,
         "trend": trend,
         "perCheckTrend": per_check_trend,
-        "failedCases": kpis.get("failed_cases", []),
     }
 
 
@@ -358,19 +320,12 @@ def render(report_dir: str, out_path: str) -> str:
         ],
         data["trend"]["labels"],
     )
-    trust_svg = line_chart_svg(
-        [
-            {"label": "deterministic share", "color": "#c084fc", "values": data["trend"]["trust"]},
-        ],
-        data["trend"]["labels"],
-    )
     percheck_svg = line_chart_svg(data["perCheckTrend"]["passRate"], data["trend"]["labels"])
     percheck_score_svg = line_chart_svg(data["perCheckTrend"]["avgScore"], data["trend"]["labels"])
 
     html_out = (
         TEMPLATE
         .replace("__TREND_SVG__", trend_svg)
-        .replace("__TRUST_SVG__", trust_svg)
         .replace("__PERCHECK_SVG__", percheck_svg)
         .replace("__PERCHECK_SCORE_SVG__", percheck_score_svg)
         .replace("__AQUA_DATA__", json.dumps(data))
