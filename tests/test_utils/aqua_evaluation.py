@@ -8,13 +8,13 @@ try:
 except ImportError:
     _PYDANTIC_AVAILABLE = False
 
-# The evaluation framework P5: compare the generated answer against the golden
+# AQuA detect.md P5: compare the generated answer against the golden
 # reference answer using semantic (cosine) similarity. At or above this the
 # cheap matcher is enough. Below it, a richer layer (the P6 LLM judge) should
 # decide instead - see EXPECTED_OUTCOME_SEMANTIC_THRESHOLD below.
 EXPECTED_OUTCOME_SEMANTIC_THRESHOLD = 0.6
 
-# The evaluation framework P6: the LLM-as-a-Judge verdict score that counts as a pass
+# AQuA detect.md P6: the LLM-as-a-Judge verdict score that counts as a pass
 # once the cheap deterministic/semantic layers could not decide. Below this the
 # expected-outcome check fails and the run escalates to human-in-the-loop.
 LLM_JUDGE_PASS_THRESHOLD = 0.3
@@ -153,7 +153,7 @@ def required_tool_executed(required, executed_tools, tool_calls):
     return name in executed_tools
 
 
-class Evaluator:
+class AQuAEvaluators:
     """
     A modular evaluation engine based on the evaluation framework.
     It generically maps Golden Anchor requirements to specific quality gates [7].
@@ -211,7 +211,7 @@ class Evaluator:
     @staticmethod
     def evaluate_structural_compliance(ai_output, model=None, schema_keys=None):
         """
-        Layer 1: Rule-Based Validation (The evaluation framework P4).
+        Layer 1: Rule-Based Validation (AQuA detect.md P4).
         Verifies the AI reliably outputs strict formats like JSON [9, 10].
 
         Behavior:
@@ -358,7 +358,7 @@ class Evaluator:
                 return {"check_name": "expected_outcome", "status": "PASSED", "score": 1.0}
             return {"check_name": "expected_outcome", "status": "FAILED", "score": 0.0, "reason": "Structured JSON expected outcome not satisfied."}
         except Exception:
-            # Semantic layer (The evaluation framework P5): cosine similarity between the
+            # Semantic layer (AQuA detect.md P5): cosine similarity between the
             # AI output and the golden reference answer. Rejects degenerate
             # fragments ("n", "I found ") without a length heuristic.
             similarity = _cosine(_embed(ai_output), _embed(expected_outcome))
@@ -368,7 +368,7 @@ class Evaluator:
             # P6 LLM-as-a-Judge: the cheap layers could not decide, so escalate
             # to the project's judge (P3 progressive evaluation). The judge
             # returns a score that feeds straight into risk-based confidence.
-            judge = Evaluator.llm_judge
+            judge = AQuAEvaluators.llm_judge
             if judge is not None:
                 verdict = judge(ai_output, expected_outcome, list(retrieved_context or []))
                 score = verdict.get("score")
@@ -393,7 +393,7 @@ class Evaluator:
         not appear in ``tool_outputs``). Skipped by run_case when no extractor
         is configured or nothing was fetched.
         """
-        extractor = Evaluator.hallucination_extractor
+        extractor = AQuAEvaluators.hallucination_extractor
         mismatches = extractor(ai_output, (trace_logs or {}).get("tool_outputs") or {})
         if mismatches:
             return {
@@ -407,7 +407,7 @@ class Evaluator:
     @classmethod
     def compute_metrics(cls, case, ai_output, trace_logs):
         """
-        Per-case bool-or-None KPI metrics for the evaluation run ledger.
+        Per-case bool-or-None KPI metrics for the AQuA run ledger.
 
         - ``intent_accurate``: the called tool names form exactly the set of
           required tools, and every required tool that declares parameters was

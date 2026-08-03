@@ -1,4 +1,4 @@
-"""Unit tests for the LLM-as-a-Judge client (tests/test_utils/llm_judge.py)."""
+"""Unit tests for the AQuA P6 LLM-as-a-Judge client (tests/test_utils/llm_judge.py)."""
 
 import pytest
 

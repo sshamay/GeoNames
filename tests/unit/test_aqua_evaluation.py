@@ -2,8 +2,8 @@
 
 import pytest
 
-from test_utils.evaluation import (
-    Evaluator,
+from test_utils.aqua_evaluation import (
+    AQuAEvaluators,
     EXPECTED_OUTCOME_SEMANTIC_THRESHOLD,
     LLM_JUDGE_PASS_THRESHOLD,
     required_tool_executed,
@@ -31,7 +31,7 @@ def test_intent_true_when_name_and_params_match():
         executed=["earthquakes"],
         calls=[{"name": "earthquakes", "parameters": {"north": 1.0, "south": 0.0, "east": 2.0}}],
     )
-    assert Evaluator.compute_metrics(case, "out", trace)["intent_accurate"] is True
+    assert AQuAEvaluators.compute_metrics(case, "out", trace)["intent_accurate"] is True
 
 
 @pytest.mark.unit
@@ -41,27 +41,27 @@ def test_intent_false_when_params_wrong():
         executed=["earthquakes"],
         calls=[{"name": "earthquakes", "parameters": {"north": 9.9}}],
     )
-    assert Evaluator.compute_metrics(case, "out", trace)["intent_accurate"] is False
+    assert AQuAEvaluators.compute_metrics(case, "out", trace)["intent_accurate"] is False
 
 
 @pytest.mark.unit
 def test_intent_false_when_extra_tool_called():
     case = {"required_tools": ["earthquakes"]}
     trace = _trace(executed=["earthquakes", "weather"], calls=[])
-    assert Evaluator.compute_metrics(case, "out", trace)["intent_accurate"] is False
+    assert AQuAEvaluators.compute_metrics(case, "out", trace)["intent_accurate"] is False
 
 
 @pytest.mark.unit
 def test_intent_none_when_no_tools_declared():
     case = {"required_tools": []}
-    assert Evaluator.compute_metrics(case, "out", _trace())["intent_accurate"] is None
+    assert AQuAEvaluators.compute_metrics(case, "out", _trace())["intent_accurate"] is None
 
 
 @pytest.mark.unit
 def test_intent_falls_back_to_name_when_no_call_trace():
     case = {"required_tools": [{"name": "weather", "parameters": {"north": 1.0}}]}
     trace = _trace(executed=["weather"], calls=[])
-    assert Evaluator.compute_metrics(case, "out", trace)["intent_accurate"] is True
+    assert AQuAEvaluators.compute_metrics(case, "out", trace)["intent_accurate"] is True
 
 
 @pytest.mark.unit
@@ -84,8 +84,8 @@ def _fake_judge(score, reason="judge decided"):
 
 @pytest.mark.unit
 def test_expected_outcome_no_judge_fails_below_threshold(monkeypatch):
-    monkeypatch.setattr(Evaluator, "llm_judge", None)
-    result = Evaluator.evaluate_expected_outcome(
+    monkeypatch.setattr(AQuAEvaluators, "llm_judge", None)
+    result = AQuAEvaluators.evaluate_expected_outcome(
         "banana spaceship quantum jelly", "the stock market rose today"
     )
     assert result["status"] == "FAILED"
@@ -95,8 +95,8 @@ def test_expected_outcome_no_judge_fails_below_threshold(monkeypatch):
 @pytest.mark.unit
 def test_expected_outcome_escalates_to_judge_when_below_threshold(monkeypatch):
     judge = _fake_judge(0.9)
-    monkeypatch.setattr(Evaluator, "llm_judge", judge)
-    result = Evaluator.evaluate_expected_outcome(
+    monkeypatch.setattr(AQuAEvaluators, "llm_judge", judge)
+    result = AQuAEvaluators.evaluate_expected_outcome(
         "banana spaceship quantum jelly", "the stock market rose today", ["ctx-a", "ctx-b"]
     )
     assert result["check_name"] == "llm_judge"
@@ -109,8 +109,8 @@ def test_expected_outcome_escalates_to_judge_when_below_threshold(monkeypatch):
 @pytest.mark.unit
 def test_expected_outcome_judge_fail(monkeypatch):
     judge = _fake_judge(0.2)
-    monkeypatch.setattr(Evaluator, "llm_judge", judge)
-    result = Evaluator.evaluate_expected_outcome(
+    monkeypatch.setattr(AQuAEvaluators, "llm_judge", judge)
+    result = AQuAEvaluators.evaluate_expected_outcome(
         "banana spaceship quantum jelly", "the stock market rose today"
     )
     assert result["check_name"] == "llm_judge"
@@ -121,8 +121,8 @@ def test_expected_outcome_judge_fail(monkeypatch):
 @pytest.mark.unit
 def test_expected_outcome_judge_not_called_on_deterministic_pass(monkeypatch):
     judge = _fake_judge(0.9)
-    monkeypatch.setattr(Evaluator, "llm_judge", judge)
-    result = Evaluator.evaluate_expected_outcome(
+    monkeypatch.setattr(AQuAEvaluators, "llm_judge", judge)
+    result = AQuAEvaluators.evaluate_expected_outcome(
         "the stock market rose today", "the stock market rose today"
     )
     assert result["status"] == "PASSED"
@@ -133,12 +133,12 @@ def test_expected_outcome_judge_not_called_on_deterministic_pass(monkeypatch):
 @pytest.mark.unit
 def test_run_case_escalates_to_judge_and_scores_confidence(monkeypatch):
     judge = _fake_judge(0.9)
-    monkeypatch.setattr(Evaluator, "llm_judge", judge)
+    monkeypatch.setattr(AQuAEvaluators, "llm_judge", judge)
     case = {
         "expected_outcome": "the stock market rose today",
         "threshold": 0.9,
     }
-    result = Evaluator.run_case(
+    result = AQuAEvaluators.run_case(
         case, "banana spaceship quantum jelly", {"retrieved_context": ["doc-1"]}
     )
     judge_check = next(c for c in result["details"] if c["check_name"] == "llm_judge")
@@ -158,8 +158,8 @@ def test_escalation_thresholds():
 @pytest.mark.unit
 def test_judge_passes_at_threshold_boundary(monkeypatch):
     judge = _fake_judge(LLM_JUDGE_PASS_THRESHOLD)
-    monkeypatch.setattr(Evaluator, "llm_judge", judge)
-    result = Evaluator.evaluate_expected_outcome(
+    monkeypatch.setattr(AQuAEvaluators, "llm_judge", judge)
+    result = AQuAEvaluators.evaluate_expected_outcome(
         "banana spaceship quantum jelly", "the stock market rose today"
     )
     assert result["check_name"] == "llm_judge"
@@ -170,8 +170,8 @@ def test_judge_passes_at_threshold_boundary(monkeypatch):
 @pytest.mark.unit
 def test_judge_fails_just_below_threshold(monkeypatch):
     judge = _fake_judge(LLM_JUDGE_PASS_THRESHOLD - 0.01)
-    monkeypatch.setattr(Evaluator, "llm_judge", judge)
-    result = Evaluator.evaluate_expected_outcome(
+    monkeypatch.setattr(AQuAEvaluators, "llm_judge", judge)
+    result = AQuAEvaluators.evaluate_expected_outcome(
         "banana spaceship quantum jelly", "the stock market rose today"
     )
     assert result["check_name"] == "llm_judge"

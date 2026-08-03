@@ -85,7 +85,7 @@ def test_assistant_trace_resets_between_answers():
 
 @pytest.mark.unit
 def test_trace_logs_are_golden_anchor_compatible():
-    """The generic evaluator keys are present and non-empty after a run."""
+    """The generic AQuA evaluator keys are present and non-empty after a run."""
     assistant = AskLocationAssistant(
         fetchers={"weather": lambda params: {"weatherObservations": []}},
     )

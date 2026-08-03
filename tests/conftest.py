@@ -67,7 +67,7 @@ logger = logging.getLogger(__name__)
 _GOLDEN_ANCHOR_REL_PATH = os.path.join("data", "golden_anchor.json")
 
 # Run KPIs: where the evaluation reporting ledger writes its reports.
-_LEDGER_STASH_KEY = pytest.StashKey["RunLedger"]()
+_LEDGER_STASH_KEY = pytest.StashKey["AQuARunLedger"]()
 
 
 def _golden_anchor_cases_path():
@@ -94,31 +94,31 @@ def pytest_generate_tests(metafunc):
         metafunc.parametrize("case_and_id", cases, ids=ids)
 
 
-def _load_evaluator(settings=None):
-    """Load the generic Evaluator class and register project hooks.
+def _load_aqua_evaluators(settings=None):
+    """Load the generic AQuAEvaluators class and register project hooks.
 
     ``hallucination_extractor`` wires the project's number-claim checker into
     the generic hallucination gate (reply numbers vs raw fetched data).
     ``llm_judge`` wires the P6 judge when configured in config.yaml; it
     stays None (fully offline) when disabled or underconfigured.
     """
-    from test_utils.evaluation import Evaluator
+    from test_utils.aqua_evaluation import AQuAEvaluators
     from test_utils.llm_judge import build_llm_judge
 
-    Evaluator.hallucination_extractor = staticmethod(claim_mismatches)
-    Evaluator.llm_judge = build_llm_judge(settings) if settings is not None else None
-    return Evaluator
+    AQuAEvaluators.hallucination_extractor = staticmethod(claim_mismatches)
+    AQuAEvaluators.llm_judge = build_llm_judge(settings) if settings is not None else None
+    return AQuAEvaluators
 
 
 @pytest.fixture(scope="session")
-def evaluator_class(settings):
+def aqua_evaluators_class(settings):
     """
-    Load the Evaluator class from test_utils/evaluation.py.
+    Load the AQuAEvaluators class from test_utils/aqua_evaluation.py.
     """
-    return _load_evaluator(settings)
+    return _load_aqua_evaluators(settings)
 
 
-def _render_dashboard(report_dir):
+def _render_aqua_dashboard(report_dir):
     """Regenerate reports/dashboard.html from the latest run + history.
 
     Loads scripts/render_dashboard.py via importlib so the repo scripts dir
@@ -159,9 +159,9 @@ def run_ledger(request):
     """
     Session-scoped run ledger for KPI reporting.
     """
-    from test_utils.run_ledger import RunLedger
+    from test_utils.aqua_reporting import AQuARunLedger
 
-    ledger = RunLedger()
+    ledger = AQuARunLedger()
     request.session.stash[_LEDGER_STASH_KEY] = ledger
     return ledger
 
@@ -201,7 +201,7 @@ def pytest_sessionfinish(session, exitstatus):
             100.0 * (kpis["pass_rate"] or 0.0), 100.0 * (kpis["escape_rate"] or 0.0),
             kpis["aggregate_confidence"]["mean"] or 0.0)
         try:
-            dash_path = _render_dashboard(ledger.report_dir)
+            dash_path = _render_aqua_dashboard(ledger.report_dir)
             if dash_path:
                 logger.info("Evaluation dashboard written: %s", dash_path)
         except Exception as dash_exc:  # pragma: no cover - dashboard is best-effort
