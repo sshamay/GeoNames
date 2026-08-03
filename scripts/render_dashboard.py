@@ -85,13 +85,13 @@ TEMPLATE = """<!DOCTYPE html>
     <div class="chartbox">__TREND_SVG__</div>
   </div>
 
-  <div class="grid2">
-    <div class="panel"><h2>Per-check pass rate (all runs)</h2>
-      <div class="chartbox">__PERCHECK_SVG__</div>
-    </div>
-    <div class="panel"><h2>Per-check average score (all runs)</h2>
-      <div class="chartbox">__PERCHECK_SCORE_SVG__</div>
-    </div>
+  <div class="panel"><h2>Per-check pass rate (all runs)</h2>
+    <div class="chartbox">__PERCHECK_SVG__</div>
+  </div>
+
+  <div class="panel"><h2>Per-check average score (all runs)</h2>
+    <div class="chartbox">__PERCHECK_SCORE_SVG__</div>
+  </div>
     </div>
 
     <aside class="sidebar">
@@ -115,7 +115,7 @@ TEMPLATE = """<!DOCTYPE html>
           <dt>Legend</dt>
           <dd>Each line&rsquo;s label and color are shown in the legend above the chart, in the same order as the lines.</dd>
           <dt>Intent accuracy</dt>
-          <dd>Share of golden-anchor cases whose executed API calls exactly match the case&rsquo;s <code>required_tools</code>. Cases that declare no tool requirement (e.g. the greeting fallback) are excluded from the denominator.</dd>
+          <dd>Share of golden-anchor cases whose executed API calls match the case&rsquo;s <code>required_tools</code> exactly &mdash; the called tool names form the same set, and every required tool that declares <code>parameters</code> was called with exactly those values. Cases that declare no tool requirement (e.g. the greeting fallback) are excluded from the denominator.</dd>
           <dt>Hallucination rate</dt>
           <dd>Share of cases where a number in the assistant&rsquo;s reply (earthquake count, strongest magnitude, weather-station count) does not match the raw JSON the fetchers returned, read from the trace&rsquo;s <code>tool_outputs</code>. Cases where nothing was fetched are excluded.</dd>
         </dl>
