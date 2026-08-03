@@ -1,8 +1,8 @@
 """Unit tests for the production factory (src/geonames/factory.py).
 
 Verifies that build_assistant wires the SUT from Settings: the client is
-configured from Settings, the LLM is resolved from Settings.llm_provider, and
-the service fetchers pass assistant_max_rows through to every call.
+configured from Settings and the service fetchers pass assistant_max_rows
+through to every call.
 """
 
 import pytest
@@ -16,12 +16,10 @@ from geonames.services import AskLocationAssistant
 def _settings(**overrides):
     defaults = {
         "app_name": "geonames",
-        "log_level": "INFO",
         "env": "test",
         "geonames_username": "testuser",
         "geonames_base_url": "https://secure.geonames.org",
         "geonames_timeout": 10.0,
-        "llm_provider": "stub",
         "assistant_max_rows": 3,
     }
     defaults.update(overrides)
@@ -66,13 +64,3 @@ def test_build_assistant_wires_fetchers_and_max_rows():
         assert params["maxRows"] == 3
     tools = assistant.trace_collector.get_trace_logs()["executed_tools"]
     assert tools == ["earthquakes", "weather"]
-
-
-@pytest.mark.unit
-def test_build_assistant_forwards_injected_llm(mocker):
-    fake_llm = mocker.Mock()
-    fake_llm.summarize.return_value = "done"
-    assistant = build_assistant(_settings(), client=_FakeClient(), llm_client=fake_llm)
-
-    assert assistant.answer("Weather near Paris?") == "done"
-    assert fake_llm.summarize.call_args.kwargs["location"] == "Paris"

@@ -12,7 +12,6 @@ def test_load_config_returns_test_profile(settings):
     """The session fixture yields the merged ``test`` profile from config.yaml."""
     assert settings.env == "test"
     assert settings.app_name == "geonames"
-    assert settings.log_level == "INFO"
 
 
 @pytest.mark.unit

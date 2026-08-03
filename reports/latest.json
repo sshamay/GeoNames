@@ -1,9 +1,9 @@
 {
   "report_type": "aqua_golden_anchor_kpis",
-  "generated_at": "2026-08-03T13:37:35.057927+00:00",
-  "git_commit": null,
+  "generated_at": "2026-08-03T14:13:13.380159+00:00",
+  "git_commit": "7b24c36",
   "mutation_id": null,
-  "duration_seconds": 2.21,
+  "duration_seconds": 10.289,
   "kpis": {
     "totals": {
       "total": 5,
@@ -60,7 +60,7 @@
     }
   },
   "pytest_suite": {
-    "passed": 4,
+    "passed": 84,
     "failed": 1,
     "skipped": 0,
     "errors": 0,

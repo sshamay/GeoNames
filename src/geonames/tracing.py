@@ -92,24 +92,3 @@ class TestTraceCollector(TraceCollector):
         self.executed_tool_calls.clear()
         self.plan.clear()
         self.location.clear()
-
-
-class NoOpTraceCollector(TraceCollector):
-    """Zero-overhead collector for production (does nothing)."""
-
-    def on_tool_called(
-        self, tool_name: str, params: Optional[Dict[str, Any]] = None
-    ) -> None:
-        pass
-
-    def get_trace_logs(self) -> Dict[str, Any]:
-        return {
-            "retrieved_context": [],
-            "executed_tools": [],
-            "executed_tool_calls": [],
-            "plan": {},
-            "location": {},
-        }
-
-    def reset(self) -> None:
-        pass

@@ -1,7 +1,6 @@
 # GeoNames — Python + pytest automation scaffold
 
 A minimal, standards-following pytest project scaffold for the GeoNames workspace.
-The existing `main.py` (PyCharm sample) is intentionally left untouched.
 
 ## Layout
 
@@ -12,7 +11,6 @@ GeoNames/
 │   └── config.example.yaml    # committed template
 ├── src/geonames/              # the package under test / automation library
 │   ├── config_loader.py       # load + validate YAML into typed Settings
-│   ├── logging_setup.py       # one place to configure logging
 │   ├── clients/               # thin adapters for external systems (HTTP here)
 │   ├── services/              # workflows that orchestrate clients
 │   └── models/                # dataclasses for request/response data
@@ -22,8 +20,7 @@ GeoNames/
 │   ├── unit/                  # fast, isolated tests with mocks
 │   └── integration/           # tests hitting real/stubbed dependencies
 ├── pyproject.toml             # packaging (src layout) + pytest config
-├── requirements.txt           # dev install entry point (-e .[dev])
-└── main.py                    # untouched PyCharm sample
+└── requirements.txt           # dev install entry point (-e .[dev])
 ```
 
 ## Setup (5 minutes)
@@ -62,8 +59,8 @@ so tests never re-declare settings. Never hardcode URLs or secrets in code.
   instead of a separate `pytest.ini` — one file for both packaging and tooling.
 - **`--strict-markers`** — the `unit` / `integration` markers are registered;
   an unregistered marker fails the run instead of silently passing.
-- **Mocking at the boundary** — all mocks use `pytest-mock`'s `mocker` fixture
-  (see `test_logging_setup.py`). Never third-party mock libraries.
+- **Mocking at the boundary** — all mocks use `pytest-mock`'s `mocker` fixture.
+  Never third-party mock libraries.
 - **Python 3.9 compatible** — `from __future__ import annotations`, typing
   imports, dataclasses; no 3.10+ syntax.
 

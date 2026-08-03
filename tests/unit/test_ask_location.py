@@ -6,14 +6,17 @@ without touching the network.
 
 import pytest
 
-from geonames.clients.llm import StubLlmClient
 from geonames.models.assistant import EndpointResult
-from geonames.services.ask_location import AskLocationAssistant
+from geonames.services.ask_location import AskLocationAssistant, summarize
+
+
+def _result(endpoint, data):
+    return EndpointResult(endpoint=endpoint, params={}, data=data)
 
 
 @pytest.mark.unit
 def test_assistant_plan_parses_without_network():
-    assistant = AskLocationAssistant(llm_client=StubLlmClient(), fetchers={})
+    assistant = AskLocationAssistant(fetchers={})
     plan = assistant.plan("Earthquakes within 50 km near Tokyo?")
     assert plan.endpoints == ("earthquakes",)
     assert plan.location == "Tokyo"
@@ -32,7 +35,6 @@ def test_assistant_fetches_each_planned_endpoint_and_summarizes():
         return _f
 
     assistant = AskLocationAssistant(
-        llm_client=StubLlmClient(),
         fetchers={
             "earthquakes": _fetcher("earthquakes", {"earthquakes": [{"magnitude": 4.2}]}),
             "weather": _fetcher("weather", {"weatherObservations": []}),
@@ -49,15 +51,29 @@ def test_assistant_fetches_each_planned_endpoint_and_summarizes():
 
 
 @pytest.mark.unit
-def test_assistant_forwards_results_to_llm(mocker):
-    fake_llm = mocker.Mock()
-    assistant = AskLocationAssistant(
-        llm_client=fake_llm,
-        fetchers={"weather": lambda params: {"weatherObservations": []}},
+def test_summarize_renders_earthquakes_and_weather():
+    quakes = {"earthquakes": [{"magnitude": 4.2}, {"magnitude": 3.1}, {"magnitude": 5.0}]}
+    weather = {"weatherObservations": [{"ICAO": "KSMF"}, {"ICAO": "KSAC"}]}
+    text = summarize(
+        [_result("earthquakes", quakes), _result("weather", weather)],
+        location="Sacramento",
     )
-    assistant.answer("Weather near Paris?")
-    fake_llm.summarize.assert_called_once()
-    results = fake_llm.summarize.call_args.args[1]
-    assert isinstance(results[0], EndpointResult)
-    assert results[0].endpoint == "weather"
-    assert fake_llm.summarize.call_args.kwargs["location"] == "Paris"
+    assert "3 recent earthquakes" in text
+    assert "strongest magnitude 5.0" in text
+    assert "weather observations from 2 stations" in text
+    assert "near Sacramento" in text
+
+
+@pytest.mark.unit
+def test_summarize_handles_empty_data():
+    assert "no recent earthquakes" in summarize(
+        [_result("earthquakes", {})], location="Sacramento"
+    )
+    assert "no weather observations" in summarize(
+        [_result("weather", {"weatherObservations": []})]
+    )
+
+
+@pytest.mark.unit
+def test_summarize_falls_back_when_no_relevant_data():
+    assert summarize([]) == "No GeoNames data was relevant to the question."

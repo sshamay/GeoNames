@@ -7,9 +7,8 @@ exact parameters each service received.
 
 import pytest
 
-from geonames.clients.llm import StubLlmClient
 from geonames.services.ask_location import AskLocationAssistant
-from geonames.tracing import NoOpTraceCollector, TestTraceCollector
+from geonames.tracing import TestTraceCollector
 
 
 @pytest.mark.unit
@@ -39,14 +38,6 @@ def test_trace_collector_reset_clears_events():
 
 
 @pytest.mark.unit
-def test_noop_trace_collector_does_nothing():
-    collector = NoOpTraceCollector()
-    collector.on_tool_called("earthquakes", {"north": 1.0})
-    collector.reset()
-    assert collector.get_trace_logs()["executed_tools"] == []
-
-
-@pytest.mark.unit
 def test_assistant_emits_plan_location_and_service_calls_in_order():
     calls = []
 
@@ -58,7 +49,6 @@ def test_assistant_emits_plan_location_and_service_calls_in_order():
         return _f
 
     assistant = AskLocationAssistant(
-        llm_client=StubLlmClient(),
         fetchers={
             "earthquakes": _fetcher("earthquakes", {"earthquakes": []}),
             "weather": _fetcher("weather", {"weatherObservations": []}),
@@ -83,7 +73,6 @@ def test_assistant_emits_plan_location_and_service_calls_in_order():
 @pytest.mark.unit
 def test_assistant_trace_resets_between_answers():
     assistant = AskLocationAssistant(
-        llm_client=StubLlmClient(),
         fetchers={"weather": lambda params: {"weatherObservations": []}},
     )
     assistant.answer("Weather near Paris?")
@@ -98,7 +87,6 @@ def test_assistant_trace_resets_between_answers():
 def test_trace_logs_are_golden_anchor_compatible():
     """The generic AQuA evaluator keys are present and non-empty after a run."""
     assistant = AskLocationAssistant(
-        llm_client=StubLlmClient(),
         fetchers={"weather": lambda params: {"weatherObservations": []}},
     )
     assistant.answer("Weather near London?")

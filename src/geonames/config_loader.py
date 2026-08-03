@@ -23,12 +23,10 @@ class Settings:
     """Typed view of the merged config for one environment."""
 
     app_name: str
-    log_level: str
     env: str
     geonames_username: Optional[str] = None
     geonames_base_url: str = "https://secure.geonames.org"
     geonames_timeout: float = 30.0
-    llm_provider: str = "stub"
     assistant_max_rows: int = 5
 
 
@@ -67,14 +65,13 @@ def load_config(env: str = "dev", config_path: Optional[Path] = None) -> Setting
     if env not in envs:
         raise ConfigError(f"Unknown environment '{env}'. Known: {sorted(envs)}")
 
-    merged: Dict[str, Any] = {**raw.get("defaults", {}), **envs[env]}
+    env_overrides = envs[env] or {}
+    merged: Dict[str, Any] = {**raw.get("defaults", {}), **env_overrides}
     return Settings(
         app_name=merged.get("app_name", "geonames"),
-        log_level=merged.get("log_level", "INFO"),
         env=env,
         geonames_username=merged.get("geonames_username"),
         geonames_base_url=merged.get("geonames_base_url", "https://secure.geonames.org"),
         geonames_timeout=merged.get("geonames_timeout", 30.0),
-        llm_provider=merged.get("llm_provider", "stub"),
         assistant_max_rows=merged.get("assistant_max_rows", 5),
     )

@@ -1,15 +1,19 @@
 """The "Ask about a location" assistant service.
 
-A thin workflow that orchestrates the pieces into one user-facing answer:
+A thin workflow that turns one free-text question into an answer:
 
 1. parse the question into an :class:`AssistantPlan` (endpoints + params)
 2. resolve the location to coordinates and derive a bounding box
 3. fetch raw data from the relevant GeoNames endpoints (via injected fetchers)
-4. hand the question + raw JSON to the :class:`LlmClient` for a summary
+4. render a natural-language summary from the raw JSON
 
 The GeoNames fetchers are injected as callables keyed by endpoint name, so the
 service never imports the test-owned HTTP client; tests can wire real service
 APIs or fakes in freely.
+
+Summarization is a deterministic, offline function (``summarize``): it formats
+the fetched JSON into text with no model call, so the full pipeline
+(parse -> fetch -> summarize) is testable without a network.
 """
 
 from __future__ import annotations
@@ -17,9 +21,8 @@ from __future__ import annotations
 import re
 from dataclasses import asdict
 from math import cos, radians
-from typing import Any, Callable, Dict, Mapping, Optional
+from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence
 
-from geonames.clients.llm import LlmClient
 from geonames.models.assistant import AssistantPlan, EndpointResult, Location
 from geonames.services.intent import LocationResolver, QuestionParser
 from geonames.tracing import TestTraceCollector, TraceCollector
@@ -38,13 +41,11 @@ class AskLocationAssistant:
 
     def __init__(
         self,
-        llm_client: LlmClient,
         fetchers: Mapping[str, Fetcher],
         parser: Optional[QuestionParser] = None,
         resolver: Optional[LocationResolver] = None,
         trace_collector: Optional[TraceCollector] = None,
     ) -> None:
-        self._llm_client = llm_client
         self._fetchers = dict(fetchers)
         self._parser = parser or QuestionParser()
         self._resolver = resolver or LocationResolver()
@@ -68,11 +69,50 @@ class AskLocationAssistant:
             self.trace_collector.on_tool_called(endpoint, params)
             data = self._fetchers[endpoint](params)
             results.append(EndpointResult(endpoint=endpoint, params=params, data=data))
-        return self._llm_client.summarize(question, results, location=location.name)
+        return summarize(results, location=location.name)
 
     def process_user_query(self, user_input: str) -> str:
         """Golden-anchor contract alias for :meth:`answer`."""
         return self.answer(user_input)
+
+
+def summarize(
+    results: Sequence[EndpointResult],
+    location: Optional[str] = None,
+) -> str:
+    """Render a deterministic summary of the fetched GeoNames data."""
+    summaries: List[str] = []
+    for result in results:
+        if result.endpoint == "earthquakes":
+            summaries.append(_summarize_earthquakes(result.data))
+        elif result.endpoint == "weather":
+            summaries.append(_summarize_weather(result.data))
+    if not summaries:
+        return "No GeoNames data was relevant to the question."
+    where = f" near {location}" if location else ""
+    return f"Found {_join(summaries)}{where}."
+
+
+def _summarize_earthquakes(data: dict) -> str:
+    quakes = data.get("earthquakes", []) or []
+    if not quakes:
+        return "no recent earthquakes"
+    strongest = max(quake["magnitude"] for quake in quakes)
+    return f"{len(quakes)} recent earthquakes (strongest magnitude {strongest:.1f})"
+
+
+def _summarize_weather(data: dict) -> str:
+    observations = data.get("weatherObservations", []) or []
+    if not observations:
+        return "no weather observations"
+    return f"weather observations from {len(observations)} stations"
+
+
+def _join(parts: List[str]) -> str:
+    """Join summary fragments grammatically (empty-safe, no extra 'and' noise)."""
+    if len(parts) == 1:
+        return parts[0]
+    return ", ".join(parts[:-1]) + " and " + parts[-1]
 
 
 def bbox_from_center(location: Location, radius_km: float) -> Dict[str, float]:
