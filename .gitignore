@@ -17,3 +17,6 @@ htmlcov/
 
 # Local config (config.example.yaml is the committed template)
 config/config.yaml
+
+# Auto-generated AQuA evaluation reports
+reports/
