@@ -135,5 +135,321 @@
     ],
     "expected_outcome": "No weather or seismic activity was reported for this area",
     "threshold": 0.9
+  },
+  {
+    "case_id": "GN-006",
+    "scenario": "Weather only near Paris",
+    "user_input": "What's the weather like around Paris?",
+    "required_keywords": [
+      "weather observations",
+      "near Paris"
+    ],
+    "forbidden_keywords": [],
+    "required_tools": [
+      {
+        "name": "weather",
+        "parameters": {
+          "north": 49.7575009009009,
+          "south": 47.9556990990991,
+          "east": 3.721462965708173,
+          "west": 0.9829370342918269
+        }
+      }
+    ],
+    "forbidden_tools": [
+      "earthquakes"
+    ],
+    "expected_outcome": "Found weather observations from 5 stations near Paris.",
+    "threshold": 0.9
+  },
+  {
+    "case_id": "GN-007",
+    "scenario": "Earthquakes near San Francisco within 50 miles",
+    "user_input": "Any earthquakes within 50 miles around San Francisco?",
+    "required_keywords": [
+      "recent earthquakes",
+      "near San Francisco"
+    ],
+    "forbidden_keywords": [],
+    "required_tools": [
+      {
+        "name": "earthquakes",
+        "parameters": {
+          "north": 38.49982792792793,
+          "south": 37.04997207207207,
+          "east": -121.50226129483899,
+          "west": -123.336538705161
+        }
+      }
+    ],
+    "forbidden_tools": [
+      "weather"
+    ],
+    "expected_outcome": "Found 5 recent earthquakes (strongest magnitude 6.0) near San Francisco.",
+    "threshold": 0.9
+  },
+  {
+    "case_id": "GN-008",
+    "scenario": "Earthquakes on a specific date near Los Angeles",
+    "user_input": "Were there earthquakes on 2026-06-15 near Los Angeles?",
+    "required_keywords": [
+      "recent earthquakes",
+      "near Los Angeles"
+    ],
+    "forbidden_keywords": [],
+    "required_tools": [
+      {
+        "name": "earthquakes",
+        "parameters": {
+          "north": 34.9531009009009,
+          "south": 33.1512990990991,
+          "east": -117.15634851419603,
+          "west": -119.33105148580398,
+          "date": "2026-06-15"
+        }
+      }
+    ],
+    "forbidden_tools": [
+      "weather"
+    ],
+    "expected_outcome": "Found 5 recent earthquakes (strongest magnitude 1.7) near Los Angeles.",
+    "threshold": 0.9
+  },
+  {
+    "case_id": "GN-009",
+    "scenario": "Rain near New York must not trigger the earthquakes tool",
+    "user_input": "Any rain around New York?",
+    "required_keywords": [
+      "weather observations",
+      "near New York"
+    ],
+    "forbidden_keywords": [
+      "earthquake"
+    ],
+    "required_tools": [
+      {
+        "name": "weather",
+        "parameters": {
+          "north": 41.6137009009009,
+          "south": 39.8118990990991,
+          "east": -72.81745856704468,
+          "west": -75.19454143295532
+        }
+      }
+    ],
+    "forbidden_tools": [
+      "earthquakes"
+    ],
+    "expected_outcome": "Found weather observations from 5 stations near New York.",
+    "threshold": 0.9
+  },
+  {
+    "case_id": "GN-010",
+    "scenario": "No earthquakes near Paris today",
+    "user_input": "Any earthquakes today near Paris?",
+    "required_keywords": [
+      "recent earthquakes",
+      "near Paris"
+    ],
+    "forbidden_keywords": [
+      "weather observations"
+    ],
+    "required_tools": [
+      {
+        "name": "earthquakes",
+        "parameters": {
+          "north": 49.7575009009009,
+          "south": 47.9556990990991,
+          "east": 3.721462965708173,
+          "west": 0.9829370342918269
+        }
+      }
+    ],
+    "forbidden_tools": [
+      "weather"
+    ],
+    "expected_outcome": "Found no recent earthquakes near Paris.",
+    "threshold": 0.9
+  },
+  {
+    "case_id": "GN-011",
+    "scenario": "Adversarial: content_rules must fail (missing required keyword 'earthquake')",
+    "user_input": "Any rain around New York?",
+    "required_keywords": [
+      "weather observations",
+      "near New York",
+      "earthquake"
+    ],
+    "forbidden_keywords": [],
+    "required_tools": [
+      {
+        "name": "weather",
+        "parameters": {
+          "north": 41.6137009009009,
+          "south": 39.8118990990991,
+          "east": -72.81745856704468,
+          "west": -75.19454143295532
+        }
+      }
+    ],
+    "forbidden_tools": [],
+    "expected_outcome": "Found weather observations from 5 stations near New York.",
+    "threshold": 0.9
+  },
+  {
+    "case_id": "GN-012",
+    "scenario": "Adversarial: content_rules must fail (forbidden keyword 'weather observations' appears)",
+    "user_input": "Any recent earthquakes or bad weather near Sacramento?",
+    "required_keywords": [
+      "recent earthquakes",
+      "near Sacramento"
+    ],
+    "forbidden_keywords": [
+      "weather observations"
+    ],
+    "required_tools": [
+      {
+        "name": "earthquakes",
+        "parameters": {
+          "north": 39.4825009009009,
+          "south": 37.6806990990991,
+          "east": -120.34194132423156,
+          "west": -122.64685867576844
+        }
+      },
+      {
+        "name": "weather",
+        "parameters": {
+          "north": 39.4825009009009,
+          "south": 37.6806990990991,
+          "east": -120.34194132423156,
+          "west": -122.64685867576844
+        }
+      }
+    ],
+    "forbidden_tools": [],
+    "expected_outcome": "Found 5 recent earthquakes (strongest magnitude 6.0) and weather observations from 5 stations near Sacramento.",
+    "threshold": 0.9
+  },
+  {
+    "case_id": "GN-013",
+    "scenario": "Adversarial: agent_logic must fail (required earthquakes tool not called)",
+    "user_input": "Any rain around New York?",
+    "required_keywords": [
+      "weather observations"
+    ],
+    "forbidden_keywords": [],
+    "required_tools": [
+      {
+        "name": "earthquakes",
+        "parameters": {
+          "north": 41.6137009009009,
+          "south": 39.8118990990991,
+          "east": -72.81745856704468,
+          "west": -75.19454143295532
+        }
+      },
+      {
+        "name": "weather",
+        "parameters": {
+          "north": 41.6137009009009,
+          "south": 39.8118990990991,
+          "east": -72.81745856704468,
+          "west": -75.19454143295532
+        }
+      }
+    ],
+    "forbidden_tools": [],
+    "expected_outcome": "Found weather observations from 5 stations near New York.",
+    "threshold": 0.9
+  },
+  {
+    "case_id": "GN-014",
+    "scenario": "Adversarial: agent_logic must fail (forbidden weather tool is called)",
+    "user_input": "Any recent earthquakes or bad weather near Sacramento?",
+    "required_keywords": [
+      "recent earthquakes"
+    ],
+    "forbidden_keywords": [],
+    "required_tools": [
+      {
+        "name": "earthquakes",
+        "parameters": {
+          "north": 39.4825009009009,
+          "south": 37.6806990990991,
+          "east": -120.34194132423156,
+          "west": -122.64685867576844
+        }
+      }
+    ],
+    "forbidden_tools": [
+      "weather"
+    ],
+    "expected_outcome": "Found 5 recent earthquakes (strongest magnitude 6.0) and weather observations from 5 stations near Sacramento.",
+    "threshold": 0.9
+  },
+  {
+    "case_id": "GN-015",
+    "scenario": "Adversarial: expected_outcome must fail (semantic mismatch with a severe-storm warning)",
+    "user_input": "What's the weather like around Paris?",
+    "required_keywords": [
+      "weather observations",
+      "near Paris"
+    ],
+    "forbidden_keywords": [],
+    "required_tools": [
+      {
+        "name": "weather",
+        "parameters": {
+          "north": 49.7575009009009,
+          "south": 47.9556990990991,
+          "east": 3.721462965708173,
+          "west": 0.9829370342918269
+        }
+      }
+    ],
+    "forbidden_tools": [],
+    "expected_outcome": "There is a severe storm warning in effect for the Paris area.",
+    "threshold": 0.9
+  },
+  {
+    "case_id": "GN-016",
+    "scenario": "Greeting only - assistant replies with guidance instead of raising",
+    "user_input": "hi",
+    "required_keywords": [
+      "recent earthquakes",
+      "weather"
+    ],
+    "forbidden_keywords": [],
+    "required_tools": [],
+    "forbidden_tools": [],
+    "expected_outcome": "Hi, I'm a weather and earthquake assistant. Ask me about recent earthquakes or the weather near a city, for example 'Any recent earthquakes near London?'.",
+    "threshold": 0.9
+  },
+  {
+    "case_id": "GN-017",
+    "scenario": "Greeting then weather query in one message",
+    "user_input": "hi, what is the weather like around Paris?",
+    "required_keywords": [
+      "weather observations",
+      "near Paris"
+    ],
+    "forbidden_keywords": [],
+    "required_tools": [
+      {
+        "name": "weather",
+        "parameters": {
+          "north": 49.7575009009009,
+          "south": 47.9556990990991,
+          "east": 3.721462965708173,
+          "west": 0.9829370342918269
+        }
+      }
+    ],
+    "forbidden_tools": [
+      "earthquakes"
+    ],
+    "expected_outcome": "Found weather observations from 5 stations near Paris.",
+    "threshold": 0.9
   }
 ]

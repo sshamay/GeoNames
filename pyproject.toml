@@ -31,6 +31,6 @@ markers = [
     "integration: tests that exercise real or stubbed dependencies",
     "services: tests that exercise GeoNames service endpoints via the client",
     "user_flow: tests that orchestrate multiple GeoNames services end to end",
-    "ai_assistant: tests for the Ask-about-a-location LLM assistant",
+    "ai_assistant: tests for the Ask-about-a-location assistant",
 ]
 addopts = "-ra --strict-markers"

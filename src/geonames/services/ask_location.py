@@ -24,7 +24,12 @@ from math import cos, radians
 from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence
 
 from geonames.models.assistant import AssistantPlan, EndpointResult, Location
-from geonames.services.intent import LocationResolver, QuestionParser
+from geonames.services.intent import (
+    LocationResolver,
+    QuestionParser,
+    UnknownIntentError,
+    UnknownLocationError,
+)
 from geonames.tracing import TestTraceCollector, TraceCollector
 
 Fetcher = Callable[[Dict[str, Any]], Dict[str, Any]]
@@ -56,10 +61,18 @@ class AskLocationAssistant:
         return self._parser.parse(question)
 
     def answer(self, question: str) -> str:
-        """Answer the question: parse, fetch, summarize (with telemetry)."""
+        """Answer the question: parse, fetch, summarize (with telemetry).
+
+        Non-query small talk (no weather/seismic intent, no location, or an
+        unknown place) does not crash the assistant - it returns a graceful
+        guidance reply instead of raising.
+        """
         self.trace_collector.reset()
-        plan = self._parser.parse(question)
-        location = self._resolver.resolve(plan.location)
+        try:
+            plan = self._parser.parse(question)
+            location = self._resolver.resolve(plan.location)
+        except (UnknownIntentError, ValueError, UnknownLocationError):
+            return _fallback_reply(question)
         self.trace_collector.on_plan(asdict(plan))
         self.trace_collector.on_location_resolved(asdict(location))
 
@@ -74,6 +87,15 @@ class AskLocationAssistant:
     def process_user_query(self, user_input: str) -> str:
         """Golden-anchor contract alias for :meth:`answer`."""
         return self.answer(user_input)
+
+
+def _fallback_reply(question: str) -> str:
+    """Friendly guidance for input that is not a weather/seismic query."""
+    return (
+        "Hi, I'm a weather and earthquake assistant. Ask me about recent "
+        "earthquakes or the weather near a city, for example 'Any recent "
+        "earthquakes near London?'."
+    )
 
 
 def summarize(

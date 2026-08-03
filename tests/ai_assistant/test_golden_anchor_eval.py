@@ -31,10 +31,29 @@ def _extract_response(result):
     return result[0] if isinstance(result, tuple) else result
 
 
+def _failure_summary(eval_result):
+    """
+    Compact one-line reason for the pytest short summary (the first line of the
+    assertion message is the only text pytest shows next to 'FAILED').
+    """
+    failed = [
+        f"{check.get('check_name')} FAILED ({check.get('reason') or 'no reason'})"
+        for check in eval_result.get("details") or []
+        if check.get("status") == "FAILED"
+    ]
+    if failed:
+        return "; ".join(failed)
+    action = eval_result.get("action")
+    score = eval_result.get("aggregate_score")
+    score_text = f"{score:.3f}" if isinstance(score, (int, float)) else str(score)
+    return f"action={action} aggregate_score={score_text}"
+
+
 def _format_eval_result(eval_result):
     """
-    Render an AQuA eval result as readable multi-line text so failing
-    golden anchors show exactly which checks failed and why.
+    Render an AQuA eval result as compact multi-line text focused on the
+    failing checks. The first line of the assertion message is the pytest
+    short-summary reason; the rest is per-check status + aggregate + AI output.
     """
     if not isinstance(eval_result, dict):
         return str(eval_result)
@@ -42,25 +61,13 @@ def _format_eval_result(eval_result):
     score = eval_result.get("aggregate_score")
     score_text = f"{score:.3f}" if isinstance(score, (int, float)) else str(score)
 
-    lines = [
-        f"action: {eval_result.get('action')}",
-        f"aggregate_score: {score_text}",
-        f"is_safe: {eval_result.get('is_safe')}",
-        "details:",
-    ]
+    lines = []
     for check in eval_result.get("details") or []:
         status = check.get("status")
-        score = check.get("score")
         reason = check.get("reason") or ""
-        line = f"  [{check.get('check_name')}] status={status} score={score}"
-        if reason:
-            line += f"  {reason}"
-        lines.append(line)
+        lines.append(f"  {check.get('check_name')}: {status}{' - ' + reason if reason else ''}")
 
-    skipped = eval_result.get("skipped")
-    if skipped is not None:
-        lines.append(f"skipped: {skipped}")
-
+    lines.append(f"  aggregate_score: {score_text} -> {eval_result.get('action')}")
     return "\n".join(lines)
 
 
@@ -111,8 +118,11 @@ def test_golden_anchor_case(ai_assistant, aqua_evaluators_class, run_ledger, cas
         )
     
     # Assert test passed
-    assert eval_result.get("is_safe") is True, (
-        f"Golden anchor case {case_id} failed evaluation:\n"
+    # Extract is_safe before the assert so pytest's assertion rewriting has
+    # nothing to introspect (it would otherwise dump the whole eval_result dict).
+    is_safe = eval_result.get("is_safe") is True
+    assert is_safe, (
+        f"Golden anchor case {case_id} failed evaluation: {_failure_summary(eval_result)}\n"
         f"{_format_eval_result(eval_result)}\n"
-        f"AI output: {ai_output}"
+        f"  AI output: {ai_output}"
     )

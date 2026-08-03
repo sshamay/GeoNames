@@ -1,8 +1,8 @@
 """Intent parsing for the "Ask about a location" assistant.
 
-A rule-based, deterministic stand-in for the LLM's parsing step: it decides
+A rule-based, deterministic parser: it decides
 which GeoNames endpoints are relevant and extracts the parameters (location,
-radius, time window) from a free-text question. The stub parser is
+radius, time window) from a free-text question. The parser is
 deliberately simple - it recognises the vocabulary the tests exercise - and is
 the single place to extend if the assistant later needs more endpoints.
 """

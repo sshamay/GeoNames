@@ -10,8 +10,8 @@ except ImportError:
 
 # AQuA detect.md P5: compare the generated answer against the golden
 # reference answer using semantic (cosine) similarity. Threshold follows the
-# skill's example (0.85). Below it, a richer layer (e.g. LLM judge) should
-# decide instead of the cheap matcher.
+# skill's example (0.85). Below it, a richer layer (e.g. an embedding model)
+# should decide instead of the cheap matcher.
 EXPECTED_OUTCOME_SEMANTIC_THRESHOLD = 0.85
 
 
@@ -21,7 +21,7 @@ def _normalize(text):
 
 def _extract_content(ai_output):
     """
-    Extract the user-facing text from a structured LLM payload.
+    Extract the user-facing text from a structured assistant payload.
 
     Many assistants serialize their reply as JSON with a "content" field
     (SmartSpend returns SmartSpendResponse). Text-based checks (content_rules,

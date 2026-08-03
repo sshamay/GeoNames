@@ -77,3 +77,23 @@ def test_summarize_handles_empty_data():
 @pytest.mark.unit
 def test_summarize_falls_back_when_no_relevant_data():
     assert summarize([]) == "No GeoNames data was relevant to the question."
+
+
+@pytest.mark.unit
+def test_answer_returns_guidance_for_small_talk():
+    assistant = AskLocationAssistant(fetchers={})
+    reply = assistant.answer("hi")
+    assert "Ask me about" in reply
+    assert assistant.trace_collector.get_trace_logs()["executed_tools"] == []
+
+
+@pytest.mark.unit
+def test_answer_returns_guidance_for_missing_location():
+    assistant = AskLocationAssistant(fetchers={})
+    assert "Ask me about" in assistant.answer("Any recent earthquakes?")
+
+
+@pytest.mark.unit
+def test_answer_returns_guidance_for_unknown_location():
+    assistant = AskLocationAssistant(fetchers={})
+    assert "Ask me about" in assistant.answer("Any earthquakes near Atlantis?")

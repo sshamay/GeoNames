@@ -1,25 +1,25 @@
 {
   "report_type": "aqua_golden_anchor_kpis",
-  "generated_at": "2026-08-03T14:13:13.380159+00:00",
-  "git_commit": "7b24c36",
+  "generated_at": "2026-08-03T14:58:20.038498+00:00",
+  "git_commit": "237f4e0",
   "mutation_id": null,
-  "duration_seconds": 10.289,
+  "duration_seconds": 6.341,
   "kpis": {
     "totals": {
-      "total": 5,
-      "passed": 4,
-      "failed": 1,
+      "total": 17,
+      "passed": 11,
+      "failed": 6,
       "coverage_gaps": 0,
       "no_tests_run": 0,
-      "evaluated": 5
+      "evaluated": 17
     },
-    "pass_rate": 0.8,
-    "escape_rate": 0.2,
+    "pass_rate": 0.6470588235294118,
+    "escape_rate": 0.35294117647058826,
     "aggregate_confidence": {
-      "mean": 0.9333333333333333,
+      "mean": 0.8823529411764705,
       "min": 0.6666666666666666,
       "max": 1.0,
-      "count": 5
+      "count": 17
     },
     "failed_cases": [
       {
@@ -29,43 +29,88 @@
           "expected_outcome"
         ],
         "reason": "Semantic similarity 0.016 below threshold 0.85."
+      },
+      {
+        "case_id": "GN-011",
+        "aggregate_score": 0.6666666666666666,
+        "failing_checks": [
+          "content_rules"
+        ],
+        "reason": "Missing required keywords: ['earthquake']"
+      },
+      {
+        "case_id": "GN-012",
+        "aggregate_score": 0.6666666666666666,
+        "failing_checks": [
+          "content_rules"
+        ],
+        "reason": "Contains forbidden keywords: ['weather observations']"
+      },
+      {
+        "case_id": "GN-013",
+        "aggregate_score": 0.6666666666666666,
+        "failing_checks": [
+          "agent_logic"
+        ],
+        "reason": "Required tools not called with expected parameters: [{'name': 'earthquakes', 'parameters': {'north': 41.6137009009009, 'south': 39.8118990990991, 'east': -72.81745856704468, 'west': -75.19454143295532}}]"
+      },
+      {
+        "case_id": "GN-014",
+        "aggregate_score": 0.6666666666666666,
+        "failing_checks": [
+          "agent_logic"
+        ],
+        "reason": "Forbidden tools were called: ['weather']"
+      },
+      {
+        "case_id": "GN-015",
+        "aggregate_score": 0.6666666666666666,
+        "failing_checks": [
+          "expected_outcome"
+        ],
+        "reason": "Semantic similarity 0.122 below threshold 0.85."
       }
     ],
     "coverage_gap_cases": [],
     "per_check": {
       "agent_logic": {
-        "total": 5,
-        "passed": 5,
-        "failed": 0,
+        "total": 16,
+        "passed": 14,
+        "failed": 2,
         "skipped": 0,
-        "pass_rate": 1.0,
-        "avg_score": 1.0
+        "pass_rate": 0.875,
+        "avg_score": 0.875
       },
       "content_rules": {
-        "total": 5,
-        "passed": 5,
-        "failed": 0,
+        "total": 17,
+        "passed": 15,
+        "failed": 2,
         "skipped": 0,
-        "pass_rate": 1.0,
-        "avg_score": 1.0
+        "pass_rate": 0.8823529411764706,
+        "avg_score": 0.8823529411764706
       },
       "expected_outcome": {
-        "total": 5,
-        "passed": 4,
-        "failed": 1,
+        "total": 17,
+        "passed": 15,
+        "failed": 2,
         "skipped": 0,
-        "pass_rate": 0.8,
-        "avg_score": 0.8
+        "pass_rate": 0.8823529411764706,
+        "avg_score": 0.8823529411764706
       }
     }
   },
   "pytest_suite": {
-    "passed": 84,
-    "failed": 1,
+    "passed": 11,
+    "failed": 6,
     "skipped": 0,
     "errors": 0,
     "failed_nodeids": [
-      "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-005]"
+      "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-005]",
+      "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-011]",
+      "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-012]",
+      "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-013]",
+      "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-014]",
+      "tests/ai_assistant/test_golden_anchor_eval.py::test_golden_anchor_case[GN-015]"
     ]
   }
 }

@@ -111,7 +111,7 @@ class WeatherObservation(BaseModel):
     cloudsCode: Optional[str] = None
     datetime: datetime
     temperature: str
-    humidity: int
+    humidity: Optional[int] = None
     stationName: str
     weatherCondition: str
     windSpeed: str

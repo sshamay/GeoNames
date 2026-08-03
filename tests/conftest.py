@@ -191,7 +191,7 @@ def ai_assistant(assistant_class, settings):
     """PROJECT-SPECIFIC: assistant with production wiring decided by Settings.
 
     Uses build_assistant so the SUT owns its own composition (client, service
-    fetchers, LLM provider, max_rows) instead of the test assembling it.
+    fetchers, max_rows) instead of the test assembling it.
     """
     from geonames.factory import build_assistant
 

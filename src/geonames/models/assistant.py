@@ -1,8 +1,8 @@
 """Data models for the "Ask about a location" assistant.
 
-Request/response dataclasses exchanged between the question parser, the
-GeoNames fetch layer and the LLM client. All values are plain, immutable
-objects so the stub assistant is trivial to reason about and test.
+Request/response dataclasses exchanged between the question parser and the
+GeoNames fetch layer. All values are plain, immutable
+objects so the assistant is trivial to reason about and test.
 """
 
 from __future__ import annotations
