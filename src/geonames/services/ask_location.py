@@ -18,7 +18,6 @@ the fetched JSON into text with no model call, so the full pipeline
 
 from __future__ import annotations
 
-import re
 from dataclasses import asdict
 from math import cos, radians
 from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence
@@ -166,6 +165,6 @@ def _endpoint_params(
     directly against what the service received.
     """
     params: Dict[str, Any] = bbox_from_center(location, plan.radius_km)
-    if endpoint == "earthquakes" and re.fullmatch(r"\d{4}-\d{2}-\d{2}", plan.time_window):
+    if endpoint == "earthquakes" and plan.time_window != "recent":
         params["date"] = plan.time_window
     return params

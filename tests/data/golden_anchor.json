@@ -478,5 +478,40 @@
     ],
     "expected_outcome": "Found 9 recent earthquakes (strongest magnitude 9.0) near London.",
     "threshold": 0.9
+  },
+  {
+    "case_id": "GN-019",
+    "scenario": "Complex Data Task: California earthquake + rain yesterday",
+    "user_input": "Were there any earthquakes and rain in California yesterday?",
+    "required_keywords": [
+      "recent earthquakes",
+      "weather observations",
+      "near California"
+    ],
+    "forbidden_keywords": [],
+    "required_tools": [
+      {
+        "name": "earthquakes",
+        "parameters": {
+          "north": 37.6792009009009,
+          "south": 35.8773990990991,
+          "east": -118.2931210575838,
+          "west": -120.5426789424162,
+          "date": "yesterday"
+        }
+      },
+      {
+        "name": "weather",
+        "parameters": {
+          "north": 37.6792009009009,
+          "south": 35.8773990990991,
+          "east": -118.2931210575838,
+          "west": -120.5426789424162
+        }
+      }
+    ],
+    "forbidden_tools": [],
+    "expected_outcome": "Found earthquake data and rain/weather observations in California from yesterday.",
+    "threshold": 0.9
   }
 ]

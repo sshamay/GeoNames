@@ -26,6 +26,7 @@ KNOWN_LOCATIONS: Dict[str, Tuple[float, float]] = {
     "tokyo": (35.6762, 139.6503),
     "paris": (48.8566, 2.3522),
     "london": (51.5074, -0.1278),
+    "california": (36.7783, -119.4179),
 }
 
 
