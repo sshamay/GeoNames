@@ -43,13 +43,15 @@ TEMPLATE = """<!DOCTYPE html>
          background:var(--bg); color:var(--text); }
   header { padding:20px 28px; border-bottom:1px solid var(--line); }
   header h1 { margin:0; font-size:20px; }
-  header .meta { color:var(--muted); font-size:13px; margin-top:4px; }
   main { padding:20px 28px; max-width:1200px; margin:0 auto; }
   .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:22px; }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
-  .card .value { font-size:26px; font-weight:700; }
-  .card .label { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.05em; }
-  .green { color:var(--green); } .red { color:var(--red); } .amber { color:var(--amber); }
+   .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
+   .card .value { font-size:26px; font-weight:700; }
+   .card .label { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.05em; }
+   .green { color:var(--green); } .red { color:var(--red); } .amber { color:var(--amber); } .purple { color:var(--purple); }
+   .last-run-frame { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin-bottom:18px; }
+   .last-run-frame h3 { margin:0 0 4px; font-size:14px; color:var(--text); }
+   .last-run-frame .meta { color:var(--muted); font-size:12px; }
   .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
   @media (max-width:900px) { .grid2 { grid-template-columns:1fr; } }
   .layout { display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:18px; align-items:start; }
@@ -76,12 +78,15 @@ TEMPLATE = """<!DOCTYPE html>
 <body>
 <header>
   <h1>AQuA Golden Anchor Dashboard</h1>
-  <div class="meta" id="meta"></div>
 </header>
 <main>
   <div class="layout">
     <div class="content">
-  <div class="cards" id="cards"></div>
+      <div class="last-run-frame">
+        <h3>Last Run</h3>
+        <div class="meta" id="meta"></div>
+      </div>
+      <div class="cards" id="cards"></div>
 
   <div class="panel"><h2>Trend &mdash; pass rate &amp; aggregate confidence (all runs)</h2>
     <div class="chartbox">__TREND_SVG__</div>
@@ -101,7 +106,7 @@ TEMPLATE = """<!DOCTYPE html>
         <h2>How to read this dashboard</h2>
         <dl>
           <dt>Run</dt>
-          <dd>Timestamp of the latest pytest run this dashboard was generated from (UTC), plus the git commit and session duration.</dd>
+           <dd>Timestamp of the latest pytest run this dashboard was generated from (UTC), plus the git commit and session duration. Shown in the <em>Last Run</em> frame above the KPI cards.</dd>
           <dt>Pass rate</dt>
           <dd>Share of evaluated golden-anchor cases that passed: <code>passed &divide; (passed + failed)</code>.</dd>
           <dt>Escape rate</dt>
@@ -137,9 +142,9 @@ function el(id) { return document.getElementById(id); }
 
 (function () {
   const meta = DATA.meta;
-  el("meta").textContent =
-    "Run " + fmtStamp(meta.generated_at) + " \\u00b7 git " + (meta.git_commit || "n/a") +
-    " \\u00b7 duration " + meta.duration_seconds + "s";
+   el("meta").textContent =
+     fmtStamp(meta.generated_at) + " \\u00b7 git " + (meta.git_commit || "n/a") +
+     " \\u00b7 duration " + meta.duration_seconds + "s";
   const k = DATA.kpis;
   const intentAcc = k.intent_accuracy || {};
   const halRate = k.hallucination_rate || {};
