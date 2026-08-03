@@ -4,13 +4,13 @@
 Reads the AQuA run ledger written by tests/test_utils/aqua_reporting.py and
 emits a single self-contained HTML file with:
 
-  - headline KPI cards (pass rate, escape rate, confidence, counts, sent to
+  - headline KPI cards (pass rate, escape rate, confidence mean, sent to
     HITL, intent accuracy, hallucination rate, automation trust signal)
   - the run timestamp, git commit and duration
   - pass/escape-rate and confidence trend over all recorded runs, plus the
     automation trust signal trend
-  - per-check pass rates and average scores for the latest run
-  - failed cases with reasons, coverage gaps, and the pytest suite summary
+  - per-check pass rate and average-score trends over all recorded runs
+  - failed cases with reasons
 
 Charts are inline SVG generated at build time (no CDN, no JS libraries), so the
 dashboard renders offline in any browser.
@@ -92,20 +92,15 @@ TEMPLATE = """<!DOCTYPE html>
   </div>
 
   <div class="grid2">
-    <div class="panel"><h2>Per-check pass rate (latest run)</h2>
+    <div class="panel"><h2>Per-check pass rate (all runs)</h2>
       <div class="chartbox">__PERCHECK_SVG__</div>
     </div>
-    <div class="panel"><h2>Per-check average score (latest run)</h2>
+    <div class="panel"><h2>Per-check average score (all runs)</h2>
       <div class="chartbox">__PERCHECK_SCORE_SVG__</div>
     </div>
   </div>
 
-  <div class="grid2">
-    <div class="panel" id="failedPanel"><h2>Failed cases</h2></div>
-    <div class="panel" id="coveragePanel"><h2>Coverage gaps</h2></div>
-  </div>
-
-  <div class="panel" id="pytestPanel"><h2>Pytest suite</h2></div>
+  <div class="panel" id="failedPanel"><h2>Failed cases</h2></div>
     </div>
 
     <aside class="sidebar">
@@ -119,21 +114,15 @@ TEMPLATE = """<!DOCTYPE html>
           <dt>Escape rate</dt>
           <dd>Share that failed &mdash; defects the quality gate caught: <code>failed &divide; (passed + failed)</code>.</dd>
           <dt>Confidence</dt>
-          <dd>Mean / min / max of each case&rsquo;s <code>aggregate_score</code>, which is the average of that case&rsquo;s check scores.</dd>
-          <dt>Evaluated / passed / failed</dt>
-          <dd>Counts from the latest run. Coverage gaps and no-tests-run cases are excluded from the pass rate on purpose.</dd>
+          <dd>Mean <code>aggregate_score</code> across the evaluated golden-anchor cases; each case&rsquo;s score is the average of its check scores.</dd>
           <dt>Sent to HITL</dt>
           <dd>Golden-anchor cases whose aggregate score fell below the threshold and were escalated to human-in-the-loop review (action <code>ESCALATE_TO_HITL</code>). They also count as failures.</dd>
           <dt>Per-check pass rate / avg score</dt>
-          <dd>Per quality gate (<code>content_rules</code>, <code>agent_logic</code>, <code>hallucination_check</code>, <code>expected_outcome</code>): how often each passed and its mean score across all cases in the latest run.</dd>
+          <dd>One line per quality gate (<code>content_rules</code>, <code>agent_logic</code>, <code>hallucination_check</code>, <code>expected_outcome</code>) across all runs: how often each gate passed and its mean score. Runs before a gate existed show gaps.</dd>
           <dt>Trend charts</dt>
           <dd>One point per pytest session read from <code>history.jsonl</code>: pass/escape rate and mean confidence over time, plus the deterministic share of the suite (the automation trust signal). Runs before these KPIs existed show gaps.</dd>
           <dt>Failed cases</dt>
           <dd>Cases where <code>is_safe = False</code>, listing the failing checks and the evaluator&rsquo;s reason (e.g. missing keyword, semantic similarity below 0.85, or reply numbers contradicting fetched data).</dd>
-          <dt>Coverage gaps</dt>
-          <dd>Cases with <code>MISSING_COVERAGE</code> &mdash; a check was skipped (e.g. no <code>expected_outcome</code> declared), so the case cannot count as a pass.</dd>
-          <dt>Pytest suite</dt>
-          <dd>Raw pytest outcomes across the whole session, including the exact failed node ids.</dd>
           <dt>Intent accuracy</dt>
           <dd>Share of golden-anchor cases whose executed API calls exactly match the case&rsquo;s <code>required_tools</code>. Cases that declare no tool requirement (e.g. the greeting fallback) are excluded from the denominator.</dd>
           <dt>Hallucination rate</dt>
@@ -165,13 +154,7 @@ function el(id) { return document.getElementById(id); }
     { label: "pass rate", value: fmtPct(k.pass_rate), cls: "green" },
     { label: "escape rate", value: fmtPct(k.escape_rate), cls: "red" },
     { label: "confidence mean", value: fmtNum(k.aggregate_confidence.mean), cls: "" },
-    { label: "confidence min", value: fmtNum(k.aggregate_confidence.min), cls: "" },
-    { label: "confidence max", value: fmtNum(k.aggregate_confidence.max), cls: "" },
-    { label: "evaluated", value: k.totals.evaluated, cls: "" },
-    { label: "passed", value: k.totals.passed, cls: "green" },
-    { label: "failed", value: k.totals.failed, cls: "red" },
     { label: "sent to hitl", value: hitl.count == null ? "n/a" : hitl.count, cls: hitl.count > 0 ? "amber" : "" },
-    { label: "coverage gaps", value: k.totals.coverage_gaps, cls: k.totals.coverage_gaps ? "amber" : "" },
     { label: "intent accuracy", value: fmtPct(intentAcc.rate), cls: "" },
     { label: "hallucination rate", value: fmtPct(halRate.rate), cls: halRate.rate > 0 ? "red" : "" },
     { label: "automation trust", value: fmtPct(trust.rate), cls: "green" },
@@ -196,23 +179,6 @@ el("failedPanel").innerHTML =
     { label: "failing checks", render: c => (c.failing_checks || []).map(ch =>
         '<span class="pill fail">' + ch + "</span>").join(" ") || "\\u2014" },
     { label: "reason", render: c => esc(c.reason) },
-  ]);
-
-el("coveragePanel").innerHTML =
-  "<h2>Coverage gaps</h2>" +
-  rows(DATA.coverageGaps, [
-    { label: "case", render: c => '<code>' + c.case_id + "</code>" },
-    { label: "skipped checks", render: c => (c.skipped_checks || []).join(", ") || "\\u2014" },
-  ]);
-
-const ps = DATA.pytest;
-el("pytestPanel").innerHTML =
-  "<h2>Pytest suite</h2>" +
-  "<p>passed <span class='pill pass'>" + ps.passed + "</span> \\u00b7 " +
-  "failed <span class='pill fail'>" + ps.failed + "</span> \\u00b7 " +
-  "skipped " + ps.skipped + " \\u00b7 errors " + ps.errors + "</p>" +
-  rows((ps.failed_nodeids || []).map(n => ({ n })), [
-    { label: "failed node ids", render: c => "<code>" + esc(c.n) + "</code>" },
   ]);
 
 function fmtPct(v) { return v == null ? "n/a" : (v * 100).toFixed(1) + "%"; }
@@ -329,55 +295,20 @@ def line_chart_svg(
     return "".join(parts)
 
 
-def bar_chart_svg(
-    names: List[str],
-    values: List[Optional[float]],
-    color: str,
-    width: int = 300,
-    height: int = 280,
-) -> str:
-    """Vertical bar chart with value labels (values are 0..1)."""
-    pad_l, pad_r, pad_t, pad_b = 44, 8, 22, 46
-    inner_w = width - pad_l - pad_r
-    inner_h = height - pad_t - pad_b
-    n = len(names)
-    slot = inner_w / max(n, 1)
-    bar_w = min(slot * 0.55, 70)
-
-    parts = [f'<svg viewBox="0 0 {width} {height}" xmlns="http://www.w3.org/2000/svg">']
-    parts.extend(_axis_grid(pad_l, width, pad_r, pad_t, inner_h))
-
-    for i, (name, v) in enumerate(zip(names, values)):
-        vv = min(max(v if v is not None else 0.0, 0.0), 1.0)
-        bx = pad_l + slot * i + (slot - bar_w) / 2
-        bh = vv * inner_h
-        cx = pad_l + slot * i + slot / 2
-        parts.append(
-            f'<rect x="{bx:.1f}" y="{pad_t + inner_h - bh:.1f}" width="{bar_w:.1f}" '
-            f'height="{max(bh, 1):.1f}" rx="3" fill="{color}"/>'
-        )
-        parts.append(
-            f'<text x="{cx:.1f}" y="{pad_t + inner_h - bh - 6:.1f}" fill="#e2e8f0" '
-            f'font-size="10" text-anchor="middle">{vv:.0%}</text>'
-        )
-        parts.append(
-            f'<text x="{cx:.1f}" y="{height - 12}" fill="#94a3b8" font-size="10" '
-            f'text-anchor="middle">{html.escape(name)}</text>'
-        )
-    parts.append("</svg>")
-    return "".join(parts)
-
-
 # ------------------------------------------------------------------ data + render
+
+_PER_CHECK_PALETTE = ["#4ade80", "#f87171", "#fbbf24", "#38bdf8", "#c084fc", "#fb7185", "#a3e635"]
+
 
 def _build_data(report_dir: str) -> Dict[str, Any]:
     latest = _load_json(os.path.join(report_dir, "latest.json"))
     kpis = latest.get("kpis", {})
-    per_check = kpis.get("per_check", {})
 
     history = _load_history(report_dir)
+    labels = [_short_label(r.get("generated_at", "")) for r in history]
+
     trend = {
-        "labels": [_short_label(r.get("generated_at", "")) for r in history],
+        "labels": labels,
         "passRate": [r.get("kpis", {}).get("pass_rate") for r in history],
         "escapeRate": [r.get("kpis", {}).get("escape_rate") for r in history],
         "confidence": [r.get("kpis", {}).get("aggregate_confidence", {}).get("mean")
@@ -385,6 +316,23 @@ def _build_data(report_dir: str) -> Dict[str, Any]:
         "trust": [r.get("kpis", {}).get("automation_trust_signal", {}).get("rate")
                   for r in history],
     }
+
+    # Per-check series across all runs (one line per quality gate). Runs before
+    # a gate existed carry None, which line_chart_svg renders as a gap.
+    check_names = sorted({
+        name for r in history
+        for name in (r.get("kpis", {}).get("per_check") or {})
+    })
+    per_check_trend = {"passRate": [], "avgScore": []}
+    for i, name in enumerate(check_names):
+        color = _PER_CHECK_PALETTE[i % len(_PER_CHECK_PALETTE)]
+        pass_vals, avg_vals = [], []
+        for r in history:
+            stat = (r.get("kpis", {}).get("per_check") or {}).get(name) or {}
+            pass_vals.append(stat.get("pass_rate"))
+            avg_vals.append(stat.get("avg_score"))
+        per_check_trend["passRate"].append({"label": name, "color": color, "values": pass_vals})
+        per_check_trend["avgScore"].append({"label": name, "color": color, "values": avg_vals})
 
     return {
         "meta": {
@@ -394,14 +342,8 @@ def _build_data(report_dir: str) -> Dict[str, Any]:
         },
         "kpis": kpis,
         "trend": trend,
-        "perCheck": {
-            "names": sorted(per_check),
-            "passRate": [per_check[n].get("pass_rate") for n in sorted(per_check)],
-            "avgScore": [per_check[n].get("avg_score") for n in sorted(per_check)],
-        },
+        "perCheckTrend": per_check_trend,
         "failedCases": kpis.get("failed_cases", []),
-        "coverageGaps": kpis.get("coverage_gap_cases", []),
-        "pytest": latest.get("pytest_suite", {}),
     }
 
 
@@ -422,12 +364,8 @@ def render(report_dir: str, out_path: str) -> str:
         ],
         data["trend"]["labels"],
     )
-    percheck_svg = bar_chart_svg(
-        data["perCheck"]["names"], data["perCheck"]["passRate"], "#4ade80"
-    )
-    percheck_score_svg = bar_chart_svg(
-        data["perCheck"]["names"], data["perCheck"]["avgScore"], "#38bdf8"
-    )
+    percheck_svg = line_chart_svg(data["perCheckTrend"]["passRate"], data["trend"]["labels"])
+    percheck_score_svg = line_chart_svg(data["perCheckTrend"]["avgScore"], data["trend"]["labels"])
 
     html_out = (
         TEMPLATE
