@@ -28,7 +28,7 @@ import json
 import os
 from typing import Any, Dict, List, Optional
 
-TEMPLATE = """<!DOCTYPE html>
+TEMPLATE = r"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
