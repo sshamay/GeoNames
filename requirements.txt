@@ -1,2 +1,9 @@
-# Dev install: editable package + test tooling (versions pinned in pyproject.toml).
--e .[dev]
+# Runtime dependencies
+PyYAML>=6.0
+requests>=2.31
+urllib3<2
+
+# Development/test dependencies
+pytest>=7.4
+pytest-mock>=3.10
+pydantic>=2.0
