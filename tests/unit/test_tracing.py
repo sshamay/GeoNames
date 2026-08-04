@@ -75,12 +75,12 @@ def test_assistant_trace_resets_between_answers():
     assistant = AskLocationAssistant(
         fetchers={"weather": lambda params: {"weatherObservations": []}},
     )
-    assistant.answer("Weather near Paris?")
-    assistant.answer("Weather near Tokyo?")
+    assistant.answer("Weather near Denver?")
+    assistant.answer("Weather near Seattle?")
 
     logs = assistant.trace_collector.get_trace_logs()
     assert logs["executed_tools"] == ["weather"]
-    assert logs["plan"]["location"] == "Tokyo"
+    assert logs["plan"]["location"] == "Seattle"
 
 
 @pytest.mark.unit
@@ -89,7 +89,7 @@ def test_trace_logs_are_golden_anchor_compatible():
     assistant = AskLocationAssistant(
         fetchers={"weather": lambda params: {"weatherObservations": []}},
     )
-    assistant.answer("Weather near London?")
+    assistant.answer("Weather near Seattle?")
     logs = assistant.trace_collector.get_trace_logs()
     assert set(("executed_tools", "executed_tool_calls", "retrieved_context")) <= set(logs)
     assert "weather" in logs["executed_tools"]

@@ -94,7 +94,7 @@ def _fallback_reply(question: str) -> str:
     return (
         "Hi, I'm a weather and earthquake assistant. Ask me about recent "
         "earthquakes or the weather near a city, for example 'Any recent "
-        "earthquakes near London?'."
+        "earthquakes near Seattle?'."
     )
 
 

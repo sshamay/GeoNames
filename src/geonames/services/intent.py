@@ -27,7 +27,8 @@ KNOWN_LOCATIONS: Dict[str, Tuple[float, float]] = {
     "paris": (48.8566, 2.3522),
     "london": (51.5074, -0.1278),
     "california": (36.7783, -119.4179),
-    # US ambiguous cities resolve to their most common state
+    "seattle": (47.6062, -122.3321),
+    "denver": (39.7392, -104.9903),
     "springfield": (39.7817, -89.6501),  # Springfield, IL
     "springfield, il": (39.7817, -89.6501),
     "columbus": (39.9612, -82.9988),  # Columbus, OH
@@ -115,7 +116,7 @@ def _extract_location(question: str) -> str:
 
     # Handle "close to downtown <City>" pattern
     downtown_match = re.search(
-        r"\bclose to downtown\s+([A-Za-z][A-Za-z'\- ,]*?)(?:\s*(?:yesterday|today|near|around|at|\?|$))",
+        r"\bclose to downtown\s+([A-Za-z][A-Za-z'\- ,]*?)(?:\s*(?:yesterday|today|near|around|at|$))",
         question, re.IGNORECASE
     )
     if downtown_match:
@@ -123,8 +124,8 @@ def _extract_location(question: str) -> str:
 
     # Standard "near|around|at <location>" pattern
     match = re.search(
-        r"\b(?:near|around|at)\s+([A-Za-z][A-Za-z'\- ,]*?)(?:\s*(?:yesterday|today|near|around|at|\?|$))",
-        question, re.IGNORECASE
+        r"\b(?:near|around|at)\s+(.+?)(?:\s+(?:yesterday|today|around|downtown)\b|$|\?)",
+        question, re.IGNORECASE | re.DOTALL
     )
     if match is None:
         match = re.search(r"\bin\s+([A-Z][a-z]+(?:[ \-][A-Z][a-z]+)*)", question)

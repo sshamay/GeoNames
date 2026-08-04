@@ -1,26 +1,44 @@
 [
   {
-    "id": "tohoku_2011_03_11",
-    "date": "2011-03-11",
-    "bbox": { "north": 47, "south": 31, "east": 146, "west": 129 },
-    "min_magnitude": 6.0,
-    "radius": 200,
-    "feature_class": "P"
-  },
-  {
-    "id": "kahramanmaras_2023_02_06",
-    "date": "2023-02-06",
-    "bbox": { "north": 39, "south": 35, "east": 39, "west": 35 },
-    "min_magnitude": 6.5,
-    "radius": 100,
-    "feature_class": "P"
-  },
-  {
     "id": "ridgecrest_2019_07_06",
+    "bbox": {
+      "north": 38,
+      "south": 34,
+      "east": -115,
+      "west": -119
+    },
     "date": "2019-07-06",
-    "bbox": { "north": 38, "south": 34, "east": -115, "west": -119 },
     "min_magnitude": 5.5,
-    "radius": 100,
-    "feature_class": "P"
+    "radius": 50,
+    "feature_class": "P",
+    "description": "M6.4 Ridgecrest earthquake near Los Angeles"
+  },
+  {
+    "id": "anchorage_2018_11_30",
+    "bbox": {
+      "north": 62,
+      "south": 60,
+      "east": -149,
+      "west": -150
+    },
+    "date": "2018-11-30",
+    "min_magnitude": 6.5,
+    "radius": 50,
+    "feature_class": "P",
+    "description": "M7.1 Anchorage earthquake near Cook Inlet"
+  },
+  {
+    "id": "napa_2014_08_24",
+    "bbox": {
+      "north": 39,
+      "south": 37,
+      "east": -121,
+      "west": -123
+    },
+    "date": "2014-08-24",
+    "min_magnitude": 5.5,
+    "radius": 50,
+    "feature_class": "P",
+    "description": "M6.0 Napa earthquake near San Francisco Bay"
   }
 ]

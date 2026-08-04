@@ -17,9 +17,9 @@ def _result(endpoint, data):
 @pytest.mark.unit
 def test_assistant_plan_parses_without_network():
     assistant = AskLocationAssistant(fetchers={})
-    plan = assistant.plan("Earthquakes within 50 km near Tokyo?")
+    plan = assistant.plan("Earthquakes within 50 km near Seattle?")
     assert plan.endpoints == ("earthquakes",)
-    assert plan.location == "Tokyo"
+    assert plan.location == "Seattle"
     assert plan.radius_km == 50.0
 
 

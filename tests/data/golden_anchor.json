@@ -61,105 +61,104 @@
   },
   {
     "case_id": "GN-003",
-    "scenario": "Earthquakes on a specific date near Tokyo",
-    "user_input": "On 2026-07-01 were there any earthquakes near Tokyo?",
+    "scenario": "Recent earthquakes near Seattle",
+    "user_input": "Any recent earthquakes near Seattle?",
     "required_keywords": [
       "recent earthquakes",
-      "near Tokyo"
+      "near Seattle"
     ],
     "forbidden_keywords": [],
     "required_tools": [
       {
         "name": "earthquakes",
         "parameters": {
-          "north": 36.5771009009009,
-          "south": 34.7752990990991,
-          "east": 140.75933881430944,
-          "west": 138.54126118569053,
-          "date": "2026-07-01"
+          "north": 48.5071009009009,
+          "south": 46.7052990990991,
+          "east": -120.99589283663532,
+          "west": -123.66830716336467
         }
       }
     ],
     "forbidden_tools": [],
-    "expected_outcome": "Found 4 recent earthquakes (strongest magnitude 2.8) near Tokyo.",
+    "expected_outcome": "Found 5 recent earthquakes (strongest magnitude 4.6) near Seattle.",
     "threshold": 0.9
   },
   {
     "case_id": "GN-004",
-    "scenario": "Earthquakes only near London",
-    "user_input": "Any earthquakes today near London?",
+    "scenario": "Earthquakes only near Denver",
+    "user_input": "Any earthquakes today near Denver?",
     "required_keywords": [
       "recent earthquakes",
-      "near London"
+      "near Denver"
     ],
     "forbidden_keywords": [],
     "required_tools": [
       {
         "name": "earthquakes",
         "parameters": {
-          "north": 52.4083009009009,
-          "south": 50.606499099099096,
-          "east": 1.3196313659159382,
-          "west": -1.575231365915938
+          "north": 40.6401009009009,
+          "south": 38.838299099099096,
+          "east": -103.81872001158524,
+          "west": -106.16187998841477
         }
       }
     ],
     "forbidden_tools": [
       "weather"
     ],
-    "expected_outcome": "Found 4 recent earthquakes (strongest magnitude 4.7) near London.",
+    "expected_outcome": "Found no recent earthquakes near Denver.",
     "threshold": 0.9
   },
   {
     "case_id": "GN-005",
-    "scenario": "Earthquakes only near London",
-    "user_input": "Any earthquakes today near London?",
+    "scenario": "Earthquakes only near Seattle (no weather tool)",
+    "user_input": "Any earthquakes today near Seattle?",
     "required_keywords": [
       "recent earthquakes",
-      "near London"
+      "near Seattle"
     ],
     "forbidden_keywords": [],
     "required_tools": [
       {
         "name": "earthquakes",
         "parameters": {
-          "north": 52.4083009009009,
-          "south": 50.606499099099096,
-          "east": 1.3196313659159382,
-          "west": -1.575231365915938
+          "north": 48.5071009009009,
+          "south": 46.7052990990991,
+          "east": -120.99589283663532,
+          "west": -123.66830716336467
         }
       }
     ],
     "forbidden_tools": [
       "weather"
     ],
-    "expected_outcome": "No weather or seismic activity was reported for this area",
+    "expected_outcome": "Found no recent earthquakes near Seattle.",
     "threshold": 0.9
   },
   {
     "case_id": "GN-006",
-    "scenario": "Weather only near Paris",
-    "user_input": "What's the weather like around Paris?",
+    "scenario": "Weather only near Denver",
+    "user_input": "What is the weather like around Denver?",
     "required_keywords": [
-      "weather observations",
-      "near Paris"
+      "weather",
+      "near Denver"
     ],
     "forbidden_keywords": [],
     "required_tools": [
       {
         "name": "weather",
         "parameters": {
-          "north": 49.7575009009009,
-          "south": 47.9556990990991,
-          "east": 3.721462965708173,
-          "west": 0.9829370342918269
+          "north": 40.6401009009009,
+          "south": 38.838299099099096,
+          "east": -103.81872001158524,
+          "west": -106.16187998841477
         }
       }
     ],
     "forbidden_tools": [
       "earthquakes"
     ],
-    "expected_outcome": "Found weather observations from 5 stations near Paris.",
+    "expected_outcome": "Found weather observations from 5 stations near Denver.",
     "threshold": 0.9
   },
   {
@@ -245,30 +244,26 @@
   },
   {
     "case_id": "GN-010",
-    "scenario": "No earthquakes near Paris today",
-    "user_input": "Any earthquakes today near Paris?",
+    "scenario": "No earthquakes near Denver today",
+    "user_input": "Any earthquakes today near Denver?",
     "required_keywords": [
       "recent earthquakes",
-      "near Paris"
+      "near Denver"
     ],
-    "forbidden_keywords": [
-      "weather observations"
-    ],
+    "forbidden_keywords": [],
     "required_tools": [
       {
         "name": "earthquakes",
         "parameters": {
-          "north": 49.7575009009009,
-          "south": 47.9556990990991,
-          "east": 3.721462965708173,
-          "west": 0.9829370342918269
+          "north": 40.6401009009009,
+          "south": 38.838299099099096,
+          "east": -103.81872001158524,
+          "west": -106.16187998841477
         }
       }
     ],
-    "forbidden_tools": [
-      "weather"
-    ],
-    "expected_outcome": "Found no recent earthquakes near Paris.",
+    "forbidden_tools": [],
+    "expected_outcome": "Found no recent earthquakes near Denver.",
     "threshold": 0.9
   },
   {
@@ -390,26 +385,26 @@
   },
   {
     "case_id": "GN-015",
-    "scenario": "Adversarial: expected_outcome must fail (semantic mismatch with a severe-storm warning)",
-    "user_input": "What's the weather like around Paris?",
+    "scenario": "Adversarial: expected outcome must fail (severe-storm warning vs Denver weather)",
+    "user_input": "What is the weather like around Denver?",
     "required_keywords": [
-      "weather observations",
-      "near Paris"
+      "weather",
+      "near Denver"
     ],
     "forbidden_keywords": [],
     "required_tools": [
       {
         "name": "weather",
         "parameters": {
-          "north": 49.7575009009009,
-          "south": 47.9556990990991,
-          "east": 3.721462965708173,
-          "west": 0.9829370342918269
+          "north": 40.6401009009009,
+          "south": 38.838299099099096,
+          "east": -103.81872001158524,
+          "west": -106.16187998841477
         }
       }
     ],
     "forbidden_tools": [],
-    "expected_outcome": "There is a severe storm warning in effect for the Paris area.",
+    "expected_outcome": "Severe thunderstorms with hail and winds up to 60 mph near Denver.",
     "threshold": 0.9
   },
   {
@@ -423,60 +418,56 @@
     "forbidden_keywords": [],
     "required_tools": [],
     "forbidden_tools": [],
-    "expected_outcome": "Hi, I'm a weather and earthquake assistant. Ask me about recent earthquakes or the weather near a city, for example 'Any recent earthquakes near London?'.",
+    "expected_outcome": "Hi, I'm a weather and earthquake assistant. Ask me about recent earthquakes or the weather near a city, for example 'Any recent earthquakes near Seattle?'.",
     "threshold": 0.9
   },
   {
     "case_id": "GN-017",
-    "scenario": "Greeting then weather query in one message",
-    "user_input": "hi, what is the weather like around Paris?",
+    "scenario": "Greeting then weather query in one message (Denver)",
+    "user_input": "Hello! What is the weather like around Denver?",
     "required_keywords": [
-      "weather observations",
-      "near Paris"
+      "weather",
+      "near Denver"
     ],
     "forbidden_keywords": [],
     "required_tools": [
       {
         "name": "weather",
         "parameters": {
-          "north": 49.7575009009009,
-          "south": 47.9556990990991,
-          "east": 3.721462965708173,
-          "west": 0.9829370342918269
+          "north": 40.6401009009009,
+          "south": 38.838299099099096,
+          "east": -103.81872001158524,
+          "west": -106.16187998841477
         }
       }
     ],
-    "forbidden_tools": [
-      "earthquakes"
-    ],
-    "expected_outcome": "Found weather observations from 5 stations near Paris.",
+    "forbidden_tools": [],
+    "expected_outcome": "Found weather observations from 5 stations near Denver.",
     "threshold": 0.9
   },
   {
     "case_id": "GN-018",
-    "scenario": "Adversarial: hallucination demo - the assistant fabricates an earthquake count; the hallucination gate must fail the case",
-    "user_input": "Any earthquakes today near London?",
-    "simulated_output": "Found 9 recent earthquakes (strongest magnitude 9.0) near London.",
+    "scenario": "Adversarial: hallucination demo - the assistant fabricates an earthquake count near Seattle; the hallucination gate must fail the case",
+    "user_input": "Any recent earthquakes near Seattle?",
+    "simulated_output": "Found 50 recent earthquakes (strongest magnitude 7.5) near Seattle.",
     "required_keywords": [
       "recent earthquakes",
-      "near London"
+      "near Seattle"
     ],
     "forbidden_keywords": [],
     "required_tools": [
       {
         "name": "earthquakes",
         "parameters": {
-          "north": 52.4083009009009,
-          "south": 50.606499099099096,
-          "east": 1.3196313659159382,
-          "west": -1.575231365915938
+          "north": 48.5071009009009,
+          "south": 46.7052990990991,
+          "east": -120.99589283663532,
+          "west": -123.66830716336467
         }
       }
     ],
-    "forbidden_tools": [
-      "weather"
-    ],
-    "expected_outcome": "Found 9 recent earthquakes (strongest magnitude 9.0) near London.",
+    "forbidden_tools": [],
+    "expected_outcome": "Found 50 recent earthquakes (strongest magnitude 7.5) near Seattle.",
     "threshold": 0.9
   },
   {

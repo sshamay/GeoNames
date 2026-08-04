@@ -27,9 +27,9 @@ def test_parse_detects_both_endpoints_for_canonical_question():
 @pytest.mark.parametrize(
     ("question", "endpoints"),
     [
-        ("Any recent earthquakes near Tokyo?", ("earthquakes",)),
-        ("What is the weather like around Paris?", ("weather",)),
-        ("Recent storms near London?", ("weather",)),
+        ("Any recent earthquakes near Seattle?", ("earthquakes",)),
+        ("What is the weather like around Denver?", ("weather",)),
+        ("Recent storms near Seattle?", ("weather",)),
         ("Rain near New York?", ("weather",)),
     ],
 )
@@ -40,7 +40,7 @@ def test_parse_detects_single_endpoint(question, endpoints):
 @pytest.mark.unit
 def test_parse_extracts_radius_km():
     assert parser.parse("Earthquakes within 50 km near Sacramento?").radius_km == 50.0
-    assert parser.parse("Earthquakes within 20 miles near Paris?").radius_km == pytest.approx(
+    assert parser.parse("Earthquakes within 20 miles near Denver?").radius_km == pytest.approx(
         20 * KM_PER_MILE
     )
     assert parser.parse("Earthquakes near Sacramento?").radius_km == DEFAULT_RADIUS_KM
@@ -50,12 +50,12 @@ def test_parse_extracts_radius_km():
 @pytest.mark.parametrize(
     ("question", "expected"),
     [
-        ("Earthquakes in the last 24 hours near Tokyo?", "last_24h"),
-        ("Earthquakes in the last 7 days near Tokyo?", "last_7d"),
-        ("Earthquakes in the last 2 weeks near Tokyo?", "last_2w"),
-        ("Weather today near Paris?", "today"),
-        ("Earthquakes since 2023-02-06 near Tokyo?", "2023-02-06"),
-        ("Recent earthquakes near Tokyo?", "recent"),
+        ("Earthquakes in the last 24 hours near Seattle?", "last_24h"),
+        ("Earthquakes in the last 7 days near Seattle?", "last_7d"),
+        ("Earthquakes in the last 2 weeks near Seattle?", "last_2w"),
+        ("Weather today near Denver?", "today"),
+        ("Earthquakes since 2023-02-06 near Seattle?", "2023-02-06"),
+        ("Recent earthquakes near Seattle?", "recent"),
     ],
 )
 def test_parse_extracts_time_window(question, expected):
@@ -65,7 +65,7 @@ def test_parse_extracts_time_window(question, expected):
 @pytest.mark.unit
 def test_parse_raises_on_no_supported_endpoint():
     with pytest.raises(UnknownIntentError, match="no supported GeoNames endpoint"):
-        parser.parse("Where is the nearest coffee shop near Paris?")
+        parser.parse("Where is the nearest coffee shop near Denver?")
 
 
 @pytest.mark.unit
