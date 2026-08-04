@@ -29,6 +29,27 @@ pytest
 pytest -v
 ```
 
+## Configuration
+
+1. Copy `config/config.example.yaml` to `config/config.yaml`
+2. Add your GeoNames username and API settings
+3. Optionally configure LLM judge endpoint (AI Horde default provided)
+
+## Dashboard
+
+After running golden anchor tests, generate and open the dashboard:
+
+```bash
+python scripts/render_dashboard.py
+open reports/dashboard.html
+```
+
+The dashboard shows:
+- KPI cards (pass rate, HITL count, judge escalations)
+- Trend charts across all test runs
+- Per-check pass rates
+- Failed case details
+
 ## Project Structure
 
 ```
@@ -110,27 +131,6 @@ The framework combines multiple evaluation layers:
 - **GN-001 to GN-025**: Test cases covering earthquakes, weather queries, location resolution, and AI quality gates
 - Each case verifies: tool calls, parameters, output keywords, and semantic correctness
 - Run with: `pytest tests/ai_assistant/test_golden_anchor_eval.py -v`
-
-## Configuration
-
-1. Copy `config/config.example.yaml` to `config/config.yaml`
-2. Add your GeoNames username and API settings
-3. Optionally configure LLM judge endpoint (AI Horde default provided)
-
-## Dashboard
-
-After running golden anchor tests, generate and open the dashboard:
-
-```bash
-python scripts/render_dashboard.py
-open reports/dashboard.html
-```
-
-The dashboard shows:
-- KPI cards (pass rate, HITL count, judge escalations)
-- Trend charts across all test runs
-- Per-check pass rates
-- Failed case details
 
 ## Test Markers
 
