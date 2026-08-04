@@ -19,6 +19,10 @@ EXPECTED_OUTCOME_SEMANTIC_THRESHOLD = 0.6
 # expected-outcome check fails and the run escalates to human-in-the-loop.
 LLM_JUDGE_PASS_THRESHOLD = 0.3
 
+# AQuA govern.md P7: default confidence threshold below which a case
+# escalates to human-in-the-loop review (action ESCALATE_TO_HITL).
+DEFAULT_CASE_THRESHOLD = 0.9
+
 
 def extract_assistant_output(result):
     """
@@ -497,7 +501,7 @@ class AQuAEvaluators:
             results.append(cls.evaluate_hallucination_consistency(ai_output, trace_logs))
 
         # 6. Final Risk-Based Confidence Gate
-        result = cls.calculate_confidence(results, case.get("threshold", 0.90))
+        result = cls.calculate_confidence(results, case.get("threshold", DEFAULT_CASE_THRESHOLD))
         result["metrics"] = cls.compute_metrics(case, ai_output, trace_logs)
         return result
 
