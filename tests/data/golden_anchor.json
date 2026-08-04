@@ -547,5 +547,136 @@
     "forbidden_tools": [],
     "expected_outcome": "Found no recent earthquakes and weather observations from 5 stations near California.",
     "threshold": 0.9
+  },
+  {
+    "case_id": "GN-021",
+    "scenario": "Ambiguous location: Springfield (default state)",
+    "user_input": "Any recent earthquakes near Springfield?",
+    "required_keywords": [
+      "recent earthquakes",
+      "near Springfield"
+    ],
+    "forbidden_keywords": [],
+    "required_tools": [
+      {
+        "name": "earthquakes",
+        "parameters": {
+          "north": 40.6826009009009,
+          "south": 38.8807990990991,
+          "east": -88.4777967497914,
+          "west": -90.8224032502086
+        }
+      }
+    ],
+    "forbidden_tools": [
+      "weather"
+    ],
+    "expected_outcome": "Found 5 recent earthquakes (strongest magnitude 3.5) near Springfield.",
+    "threshold": 0.9
+  },
+  {
+    "case_id": "GN-022",
+    "scenario": "Ambiguous location: Columbus (default state)",
+    "user_input": "Any recent earthquakes near Columbus?",
+    "required_keywords": [
+      "recent earthquakes",
+      "near Columbus"
+    ],
+    "forbidden_keywords": [],
+    "required_tools": [
+      {
+        "name": "earthquakes",
+        "parameters": {
+          "north": 40.8621009009009,
+          "south": 39.0602990990991,
+          "east": -81.8234250084135,
+          "west": -84.17417499158651
+        }
+      }
+    ],
+    "forbidden_tools": [
+      "weather"
+    ],
+    "expected_outcome": "Found 5 recent earthquakes (strongest magnitude 3.4) near Columbus.",
+    "threshold": 0.9
+  },
+  {
+    "case_id": "GN-023",
+    "scenario": "State-based location with conversational 'around downtown'",
+    "user_input": "Weather near Austin, TX around downtown?",
+    "required_keywords": [
+      "weather observations",
+      "near Austin, TX"
+    ],
+    "forbidden_keywords": [],
+    "required_tools": [
+      {
+        "name": "weather",
+        "parameters": {
+          "north": 31.1681009009009,
+          "south": 29.3662990990991,
+          "east": -96.70000940698102,
+          "west": -98.78619059301897
+        }
+      }
+    ],
+    "forbidden_tools": [
+      "earthquakes"
+    ],
+    "expected_outcome": "Found weather observations from 5 stations near Austin, TX.",
+    "threshold": 0.9
+  },
+  {
+    "case_id": "GN-024",
+    "scenario": "State-based location with yesterday time window",
+    "user_input": "Any earthquakes near Austin, TX yesterday?",
+    "required_keywords": [
+      "recent earthquakes",
+      "near Austin"
+    ],
+    "forbidden_keywords": [],
+    "required_tools": [
+      {
+        "name": "earthquakes",
+        "parameters": {
+          "north": 31.1681009009009,
+          "south": 29.3662990990991,
+          "east": -96.70000940698102,
+          "west": -98.78619059301897,
+          "date": "yesterday"
+        }
+      }
+    ],
+    "forbidden_tools": [
+      "weather"
+    ],
+    "expected_outcome": "Found no recent earthquakes near Austin, TX.",
+    "threshold": 0.9
+  },
+  {
+    "case_id": "GN-025",
+    "scenario": "Conversational 'near me' defaults to Sacramento",
+    "user_input": "Show my local weather near me",
+    "required_keywords": [
+      "weather observations",
+      "near Sacramento"
+    ],
+    "forbidden_keywords": [],
+    "required_tools": [
+      {
+        "name": "weather",
+        "parameters": {
+          "north": 39.4825009009009,
+          "south": 37.6806990990991,
+          "east": -120.34194132423156,
+          "west": -122.64685867576844
+        }
+      }
+    ],
+    "forbidden_tools": [
+      "earthquakes"
+    ],
+    "expected_outcome": "Found weather observations from 5 stations near Sacramento.",
+    "threshold": 0.9
   }
 ]

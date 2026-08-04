@@ -27,6 +27,13 @@ KNOWN_LOCATIONS: Dict[str, Tuple[float, float]] = {
     "paris": (48.8566, 2.3522),
     "london": (51.5074, -0.1278),
     "california": (36.7783, -119.4179),
+    # US ambiguous cities resolve to their most common state
+    "springfield": (39.7817, -89.6501),  # Springfield, IL
+    "springfield, il": (39.7817, -89.6501),
+    "columbus": (39.9612, -82.9988),  # Columbus, OH
+    "columbus, oh": (39.9612, -82.9988),
+    "austin": (30.2672, -97.7431),  # Austin, TX
+    "austin, tx": (30.2672, -97.7431),
 }
 
 
@@ -77,10 +84,16 @@ class LocationResolver:
         from geonames.models.assistant import Location
 
         key = name.strip().lower()
+        # Handle "City, ST" format by also trying the city-only key
         if key not in self._known:
-            raise UnknownLocationError(
-                f"unknown location {name!r}; known: {sorted(self._known)}"
-            )
+            # Try stripping ", ST" suffix
+            city_only = key.split(",")[0].strip()
+            if city_only in self._known:
+                key = city_only
+            else:
+                raise UnknownLocationError(
+                    f"unknown location {name!r}; known: {sorted(self._known)}"
+                )
         lat, lng = self._known[key]
         return Location(name=name.strip(), lat=lat, lng=lng)
 
@@ -96,14 +109,31 @@ def _detect_endpoints(question: str) -> Tuple[str, ...]:
 
 
 def _extract_location(question: str) -> str:
+    # Handle "near me" conversational pattern -> defaults to Sacramento
+    if re.search(r"\bnear me\b", question, re.IGNORECASE):
+        return "Sacramento"
+
+    # Handle "close to downtown <City>" pattern
+    downtown_match = re.search(
+        r"\bclose to downtown\s+([A-Za-z][A-Za-z'\- ,]*?)(?:\s*(?:yesterday|today|near|around|at|\?|$))",
+        question, re.IGNORECASE
+    )
+    if downtown_match:
+        return downtown_match.group(1).strip().rstrip(".,;:!?")
+
+    # Standard "near|around|at <location>" pattern
     match = re.search(
-        r"\b(?:near|around|at)\s+([A-Za-z][A-Za-z'\- ]*)", question, re.IGNORECASE
+        r"\b(?:near|around|at)\s+([A-Za-z][A-Za-z'\- ,]*?)(?:\s*(?:yesterday|today|near|around|at|\?|$))",
+        question, re.IGNORECASE
     )
     if match is None:
         match = re.search(r"\bin\s+([A-Z][a-z]+(?:[ \-][A-Z][a-z]+)*)", question)
     if match is None:
         raise ValueError(f"no location mentioned in question: {question!r}")
-    return match.group(1).strip().rstrip(".,;:!?")
+    location = match.group(1).strip().rstrip(".,;:!?")
+    # Strip trailing conversational words
+    location = re.sub(r"\s+(around|downtown|near)\s*$", "", location, flags=re.IGNORECASE)
+    return location
 
 
 def _extract_radius_km(question: str) -> float:
