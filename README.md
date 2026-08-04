@@ -119,11 +119,11 @@ The framework combines multiple evaluation layers:
 
 ## Dashboard
 
-After running golden anchor tests, generate the dashboard:
+After running golden anchor tests, generate and open the dashboard:
 
 ```bash
 python scripts/render_dashboard.py
-# Open reports/dashboard.html
+open reports/dashboard.html
 ```
 
 The dashboard shows:
