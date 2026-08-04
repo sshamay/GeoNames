@@ -37,11 +37,16 @@ pytest -v
 
 ## Dashboard
 
-After running golden anchor tests, generate and open the dashboard:
+The dashboard is generated automatically at the end of every golden anchor test run (`reports/dashboard.html`). Open it with:
+
+```bash
+open reports/dashboard.html
+```
+
+To regenerate the dashboard from an existing run without re-running tests:
 
 ```bash
 python scripts/render_dashboard.py
-open reports/dashboard.html
 ```
 
 The dashboard shows:
