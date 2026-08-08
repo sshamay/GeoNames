@@ -94,12 +94,13 @@ def _extract_verdict(content: str) -> Dict[str, Any]:
 class _OpenAIJudge:
     """Minimal OpenAI-compatible chat-completions client used as the judge."""
 
-    def __init__(self, base_url: str, model: str, api_key: str, timeout: float, rubric: str):
+    def __init__(self, base_url: str, model: str, api_key: str, timeout: float, rubric: str, debug: bool = False):
         self._base_url = base_url.rstrip("/")
         self._model = model
         self._api_key = api_key
         self._timeout = timeout
         self._rubric = rubric
+        self._debug = debug
 
     def __call__(self, ai_output: str, expected_outcome: str, retrieved_context: List[Any]) -> Dict[str, Any]:
         user_prompt = (
@@ -115,6 +116,7 @@ class _OpenAIJudge:
         # couple of times on transport errors and unparseable verdicts - the next
         # attempt usually lands on a different worker.
         last_error = None
+        last_content = None
         for attempt in range(_JUDGE_MAX_ATTEMPTS):
             try:
                 response = requests.post(
@@ -136,22 +138,29 @@ class _OpenAIJudge:
                 )
                 response.raise_for_status()
                 content = response.json()["choices"][0]["message"]["content"]
+                last_content = content
             except Exception as exc:
                 last_error = f"LLM judge call failed: {exc}"
                 if attempt < _JUDGE_MAX_ATTEMPTS - 1:
                     time.sleep(0.5 * (attempt + 1))
                     continue
-                return {"score": 0.0, "reason": last_error}
+                return self._with_debug({"score": 0.0, "reason": last_error}, None)
 
             verdict = _extract_verdict(content)
             if not verdict["reason"].startswith(_UNPARSEABLE_PREFIX):
                 if not isinstance(verdict["score"], (int, float)) or not 0.0 <= verdict["score"] <= 1.0:
                     verdict["score"] = 0.0
-                return verdict
+                return self._with_debug(verdict, content)
             last_error = verdict["reason"]
             if attempt < _JUDGE_MAX_ATTEMPTS - 1:
                 time.sleep(0.5 * (attempt + 1))
-        return {"score": 0.0, "reason": last_error}
+        return self._with_debug({"score": 0.0, "reason": last_error}, last_content)
+
+    def _with_debug(self, verdict: Dict[str, Any], raw: Optional[str]) -> Dict[str, Any]:
+        """Attach the raw model output when judge_debug is enabled."""
+        if self._debug:
+            verdict["raw"] = raw
+        return verdict
 
 
 def build_llm_judge(settings: Settings) -> Optional[JudgeFn]:
@@ -171,4 +180,5 @@ def build_llm_judge(settings: Settings) -> Optional[JudgeFn]:
         api_key=settings.judge_api_key,
         timeout=settings.judge_timeout,
         rubric=settings.judge_rubric,
+        debug=settings.judge_debug,
     )

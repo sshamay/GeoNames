@@ -25,6 +25,10 @@ defaults:
   judge_api_key: "0000000000"
   judge_timeout: 120
   judge_rubric: groundedness_and_completeness
+  # Persist the raw LLM judge model output alongside the parsed score/reason in
+  # the run report (reports/aqua_run_<ts>.json -> entries[].checks[].raw_judge_output).
+  # Debug-only; bloaty, so leave off for routine runs.
+  judge_debug: false
   #
   # OPTION B - local Ollama (recommended for offline/fast/privacy-safe runs):
   #   # 1. Install Ollama (https://ollama.com) and start it: `ollama serve`
@@ -36,6 +40,7 @@ defaults:
   #   judge_api_key: ollama
   #   judge_timeout: 60
   #   judge_rubric: groundedness_and_completeness
+  #   judge_debug: false
 
 envs:
   test:

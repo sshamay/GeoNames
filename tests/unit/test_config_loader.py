@@ -38,13 +38,29 @@ def test_load_config_raises_when_file_missing():
 
 
 @pytest.mark.unit
-def test_judge_config_loaded_from_yaml(settings):
-    """The local config.yaml maps judge keys onto Settings."""
+def test_judge_config_loaded_from_yaml(tmp_path):
+    """YAML judge keys map onto Settings (deterministic, not local-config dependent)."""
+    config_file = tmp_path / "config.yaml"
+    config_file.write_text(
+        "defaults:\n"
+        "  app_name: geonames\n"
+        "  judge_enabled: true\n"
+        "  judge_base_url: http://localhost:11434/v1\n"
+        "  judge_model: llama3.2:3b\n"
+        "  judge_api_key: ollama\n"
+        "  judge_timeout: 60\n"
+        "  judge_rubric: groundedness_and_completeness\n"
+        "  judge_debug: true\n"
+        "envs:\n  test:\n"
+    )
+    settings = load_config(env="test", config_path=config_file)
     assert settings.judge_enabled is True
-    assert settings.judge_base_url == "https://oai.aihorde.net/v1"
-    assert settings.judge_model == "google/gemma-4-31b"
-    assert settings.judge_api_key == "0000000000"
-    assert settings.judge_timeout == 120
+    assert settings.judge_base_url == "http://localhost:11434/v1"
+    assert settings.judge_model == "llama3.2:3b"
+    assert settings.judge_api_key == "ollama"
+    assert settings.judge_timeout == 60
+    assert settings.judge_rubric == "groundedness_and_completeness"
+    assert settings.judge_debug is True
 
 
 @pytest.mark.unit
@@ -59,3 +75,4 @@ def test_judge_fallback_defaults_without_keys(tmp_path):
     assert settings.judge_api_key is None
     assert settings.judge_timeout == 60.0
     assert settings.judge_rubric == "groundedness_and_completeness"
+    assert settings.judge_debug is False

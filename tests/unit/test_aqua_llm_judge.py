@@ -59,6 +59,37 @@ def test_judge_posts_to_chat_completions_and_parses_verdict(mocker):
 
 
 @pytest.mark.unit
+def test_judge_debug_mode_attaches_raw_output(mocker):
+    content = '{"score": 0.9, "reason": "grounded"}'
+    response = mocker.Mock()
+    response.json.return_value = {"choices": [{"message": {"content": content}}]}
+    mocker.patch("requests.post", return_value=response)
+
+    judge = build_llm_judge(_settings(judge_debug=True))
+    verdict = judge("reply", "golden", [])
+
+    assert verdict["score"] == 0.9
+    assert verdict["reason"] == "grounded"
+    assert verdict["raw"] == content
+
+
+@pytest.mark.unit
+def test_judge_debug_mode_attaches_raw_on_unparseable(mocker):
+    response = mocker.Mock()
+    response.json.return_value = {
+        "choices": [{"message": {"content": "this is not json"}}]
+    }
+    mocker.patch("requests.post", return_value=response)
+
+    judge = build_llm_judge(_settings(judge_debug=True))
+    verdict = judge("reply", "golden", [])
+
+    assert verdict["score"] == 0.0
+    assert "unparseable" in verdict["reason"]
+    assert verdict["raw"] == "this is not json"
+
+
+@pytest.mark.unit
 def test_judge_accepts_fenced_json_output(mocker):
     response = mocker.Mock()
     response.json.return_value = {

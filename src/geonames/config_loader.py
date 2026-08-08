@@ -35,6 +35,7 @@ class Settings:
     judge_api_key: Optional[str] = None
     judge_timeout: float = 60.0
     judge_rubric: str = "groundedness_and_completeness"
+    judge_debug: bool = False
 
 
 def _default_config_path() -> Path:
@@ -87,4 +88,5 @@ def load_config(env: str = "dev", config_path: Optional[Path] = None) -> Setting
         judge_api_key=merged.get("judge_api_key") or None,
         judge_timeout=merged.get("judge_timeout", 60.0),
         judge_rubric=merged.get("judge_rubric", "groundedness_and_completeness"),
+        judge_debug=bool(merged.get("judge_debug", False)),
     )
