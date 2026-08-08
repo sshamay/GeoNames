@@ -14,16 +14,28 @@ defaults:
   # completeness scoring. Off by default (the suite then stays fully offline
   # and deterministic).
   #
-  # Keyless default: AI Horde anonymous access - no signup or API key. Use the
-  # literal key "0000000000" at https://oai.aihorde.net/v1 (any OpenAI-compatible
-  # endpoint/model works). Note: anonymous Horde access is low-priority queue and
-  # runs on community volunteers - fine for local test runs, not for sensitive data.
+  # OPTION A (default example) - AI Horde anonymous access: no signup or API
+  # key. Use the literal key "0000000000" at https://oai.aihorde.net/v1 (any
+  # OpenAI-compatible endpoint/model works). Note: anonymous Horde access is a
+  # low-priority queue running on community volunteers - fine for local test
+  # runs, not for sensitive data.
   judge_enabled: false
   judge_base_url: https://oai.aihorde.net/v1
   judge_model: google/gemma-4-31b
   judge_api_key: "0000000000"
   judge_timeout: 120
   judge_rubric: groundedness_and_completeness
+  #
+  # OPTION B - local Ollama (recommended for offline/fast/privacy-safe runs):
+  #   # 1. Install Ollama (https://ollama.com) and start it: `ollama serve`
+  #   # 2. Pull a model: `ollama pull llama3.2:3b`
+  #   # 3. Point the judge at Ollama's OpenAI-compatible endpoint:
+  #   judge_enabled: true
+  #   judge_base_url: http://localhost:11434/v1
+  #   judge_model: llama3.2:3b
+  #   judge_api_key: ollama
+  #   judge_timeout: 60
+  #   judge_rubric: groundedness_and_completeness
 
 envs:
   test:
