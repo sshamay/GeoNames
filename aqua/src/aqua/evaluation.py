@@ -84,10 +84,9 @@ def _extract_content(ai_output):
     """
     Extract the user-facing text from a structured assistant payload.
 
-    Many assistants serialize their reply as JSON with a "content" field
-    (SmartSpend returns SmartSpendResponse). Text-based checks (content_rules,
-    expected_outcome) run against that content. Non-JSON or schemaless output
-    passes through unchanged.
+    Many assistants serialize their reply as JSON with a "content" field.
+    Text-based checks (content_rules, expected_outcome) run against that
+    content. Non-JSON or schemaless output passes through unchanged.
     """
     if not isinstance(ai_output, str):
         return ai_output
@@ -178,6 +177,13 @@ class AQuAEvaluators:
     # threshold).
     llm_judge = None
 
+    # Evaluation thresholds. Overridable from the host's aqua_config.py
+    # (THRESHOLDS) via the plugin's aqua_thresholds fixture; the module
+    # constants below are the framework defaults.
+    expected_outcome_semantic_threshold = EXPECTED_OUTCOME_SEMANTIC_THRESHOLD
+    llm_judge_pass_threshold = LLM_JUDGE_PASS_THRESHOLD
+    default_case_threshold = DEFAULT_CASE_THRESHOLD
+
     @staticmethod
     def evaluate_execution_path(trace_logs, required_documents):
         """
@@ -256,6 +262,8 @@ class AQuAEvaluators:
         Validates keyword presence and prevents 'vibe coding' hallucinations [9, 11].
         """
         ai_output = ai_output or ""
+        if not isinstance(ai_output, str):
+            ai_output = str(ai_output)
         reasons = []
         score = 1.0
 
@@ -366,7 +374,8 @@ class AQuAEvaluators:
             # AI output and the golden reference answer. Rejects degenerate
             # fragments ("n", "I found ") without a length heuristic.
             similarity = _cosine(_embed(ai_output), _embed(expected_outcome))
-            if similarity >= EXPECTED_OUTCOME_SEMANTIC_THRESHOLD:
+            threshold = AQuAEvaluators.expected_outcome_semantic_threshold
+            if similarity >= threshold:
                 return {"check_name": "expected_outcome", "status": "PASSED", "score": 1.0}
 
             # P6 LLM-as-a-Judge: the cheap layers could not decide, so escalate
@@ -380,7 +389,7 @@ class AQuAEvaluators:
                     score = 0.0
                 check = {
                     "check_name": "llm_judge",
-                    "status": "PASSED" if score >= LLM_JUDGE_PASS_THRESHOLD else "FAILED",
+                    "status": "PASSED" if score >= AQuAEvaluators.llm_judge_pass_threshold else "FAILED",
                     "score": score,
                     "reason": f"LLM judge verdict ({score:.2f}): {verdict.get('reason') or 'no rationale'}",
                 }
@@ -390,7 +399,7 @@ class AQuAEvaluators:
                     check["raw_judge_output"] = verdict["raw"]
                 return check
             return {"check_name": "expected_outcome", "status": "FAILED", "score": 0.0,
-                    "reason": f"Semantic similarity {similarity:.3f} below threshold {EXPECTED_OUTCOME_SEMANTIC_THRESHOLD}."}
+                    "reason": f"Semantic similarity {similarity:.3f} below threshold {AQuAEvaluators.expected_outcome_semantic_threshold}."}
 
     @staticmethod
     def evaluate_hallucination_consistency(ai_output, trace_logs):
@@ -473,7 +482,7 @@ class AQuAEvaluators:
             results.append(cls.evaluate_structural_compliance(ai_output, model=response_model))
 
         # Text-based checks run against the extracted user-facing content
-        # (unwraps SmartSpendResponse-style JSON payloads when present).
+        # (unwraps structured JSON payloads when present).
         content = _extract_content(ai_output)
 
         # 1. Check Execution Path (Required Documents)
@@ -506,7 +515,7 @@ class AQuAEvaluators:
             results.append(cls.evaluate_hallucination_consistency(ai_output, trace_logs))
 
         # 6. Final Risk-Based Confidence Gate
-        result = cls.calculate_confidence(results, case.get("threshold", DEFAULT_CASE_THRESHOLD))
+        result = cls.calculate_confidence(results, case.get("threshold", AQuAEvaluators.default_case_threshold))
         result["metrics"] = cls.compute_metrics(case, ai_output, trace_logs)
         return result
 

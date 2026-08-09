@@ -9,46 +9,9 @@ defaults:
   assistant_max_rows: 5
   # Copy your username (from geonames.org) into config.yaml - never commit it here.
   geonames_username: ""
-  # AQuA P6 LLM-as-a-Judge: golden-anchor cases that the deterministic and
-  # semantic layers cannot decide are escalated to this judge for groundedness/
-  # completeness scoring. Off by default (the suite then stays fully offline
-  # and deterministic).
-  #
-  # judge_provider selects the provider; each one supplies its own defaults for
-  # judge_base_url and judge_api_key, so you usually only set judge_model (plus
-  # any non-default values). Supported providers:
-  #
-  #   openai_compatible (default) - any Bearer-auth /chat/completions endpoint;
-  #     judge_base_url AND judge_api_key are required.
-  #   openai   - https://api.openai.com/v1; requires a real API key.
-  #   aihorde  - keyless anonymous access at https://oai.aihorde.net/v1, API
-  #     key "0000000000". Community volunteer queue - fine for local test runs,
-  #     not for sensitive data.
-  #   ollama   - http://localhost:11434/v1, API key "ollama" (any value works).
-  #     Recommended for offline/fast/privacy-safe runs: install Ollama, start
-  #     `ollama serve`, then `ollama pull llama3.2:3b`.
-  judge_enabled: false
-  judge_provider: aihorde
-  judge_model: google/gemma-4-31b
-  # judge_base_url:            # optional: provider default applies when empty
-  # judge_api_key: ""          # optional: provider default applies when empty
-  judge_timeout: 120
-  judge_rubric: groundedness_and_completeness
-  # Persist the raw LLM judge model output alongside the parsed score/reason in
-  # the run report (reports/aqua_run_<ts>.json -> entries[].checks[].raw_judge_output).
-  # Debug-only; bloaty, so leave off for routine runs.
-  judge_debug: false
-  #
-  # OPTION B - local Ollama (recommended for offline/fast/privacy-safe runs):
-  #   # 1. Install Ollama (https://ollama.com) and start it: `ollama serve`
-  #   # 2. Pull a model: `ollama pull llama3.2:3b`
-  #   # 3. Select the provider and model; base_url/api_key use Ollama defaults:
-  #   judge_enabled: true
-  #   judge_provider: ollama
-  #   judge_model: llama3.2:3b
-  #   judge_timeout: 60
-  #   judge_rubric: groundedness_and_completeness
-  #   judge_debug: false
+  # AQuA evaluation settings (judge, thresholds, hallucination definition) are
+  # NOT here: they live in ONE place, the project-root aqua_config.py. Copy
+  # aqua/src/aqua/aqua_config.example.py -> aqua_config.py and edit it directly.
 
 envs:
   test:

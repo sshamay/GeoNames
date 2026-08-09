@@ -1,9 +1,10 @@
 """Trace instrumentation for the "Ask about a location" assistant.
 
-Mirrors the TraceCollector pattern used by the SmartSpend golden-anchor
-framework so the same generic evaluator can verify this assistant: the
-collected logs expose the execution path (which GeoNames services were called,
-and in which order) plus the exact parameters each call received.
+Implements the generic ``TraceCollector`` contract from the AQuA framework
+(``aqua.tracing``) plus GeoNames-specific events (``on_plan``,
+``on_location_resolved``). The collected logs expose the execution path (which
+GeoNames services were called, and in which order) plus the exact parameters
+each call received.
 
 Contract (Phase 2): ``AskLocationAssistant.answer()`` returns just the summary
 string; tests and the golden-anchor evaluator read telemetry from
@@ -12,53 +13,9 @@ string; tests and the golden-anchor evaluator read telemetry from
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 
-
-class TraceCollector(ABC):
-    """Collects events emitted by the assistant during execution.
-
-    Implementations are decoupled from assistant logic so multiple collectors
-    can coexist (test, monitoring, file logging).
-    """
-
-    @abstractmethod
-    def on_tool_called(
-        self, tool_name: str, params: Optional[Dict[str, Any]] = None
-    ) -> None:
-        """Record a GeoNames service endpoint call.
-
-        Args:
-            tool_name: Endpoint name, e.g. ``earthquakes`` or ``weather``.
-            params: The parameters the service was called with.
-        """
-        ...
-
-    @abstractmethod
-    def on_tool_output(self, tool_name: str, data: Dict[str, Any]) -> None:
-        """Record the raw JSON returned by a GeoNames service endpoint call.
-
-        Kept separate from :meth:`on_tool_called` so the execution path stays
-        readable while raw responses stay available for KPI checks (e.g. the
-        hallucination rate compares numbers in the summary against this data).
-        """
-        ...
-
-    @abstractmethod
-    def get_trace_logs(self) -> Dict[str, Any]:
-        """Return the accumulated trace logs.
-
-        Keys mirror the golden-anchor evaluator contract:
-        - ``executed_tools``: endpoint names in call order (the execution path)
-        - ``executed_tool_calls``: one ``{"name": ..., "parameters": ...}`` per call
-        - ``tool_outputs``: raw response JSON per endpoint (for KPI checks)
-        - ``retrieved_context``: always empty (GeoNames fetches, not documents)
-        """
-        ...
-
-    def reset(self) -> None:
-        """Clear trace logs between queries."""
+from aqua.tracing import TraceCollector
 
 
 class TestTraceCollector(TraceCollector):

@@ -12,6 +12,7 @@ source .venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 pip install -e .
+pip install -e ./aqua   # standalone AQuA golden-anchor framework (pytest plugin)
 
 # Run unit tests (fast, no network)
 pytest tests/unit/ -m unit
@@ -50,7 +51,8 @@ open reports/dashboard.html (using prefered browser)
 To regenerate the dashboard from an existing run without re-running tests:
 
 ```bash
-python scripts/render_dashboard.py
+aqua dashboard            # regenerates reports/dashboard.html from latest.json
+aqua report               # pretty-print the latest run's KPIs
 ```
 
 The dashboard shows:
@@ -58,6 +60,35 @@ The dashboard shows:
 - Trend charts across all test runs
 - Per-check pass rates
 - Failed case details
+
+## Standalone AQuA Framework
+
+The golden-anchor harness is packaged as an installable, project-agnostic
+framework in `aqua/` (PyPI name `aqua`, pytest plugin `aqua.plugin`). It can be
+used in any project that has an AI assistant with a golden-anchor cases file —
+no GeoNames code involved.
+
+Framework-provided (generic):
+
+- `--aqua-cases` pytest option + `case_and_id` parametrization
+- `run_ledger` fixture (session-scoped KPI ledger) + `pytest_sessionfinish`
+  reporting/dashboard generation into `$AQUA_REPORT_DIR` (default `reports/`)
+- `AQuAEvaluators` / `build_llm_judge` / `run_golden_anchor_case` /
+  `assert_golden_anchor` from the `aqua.*` modules
+- Judge config via `AQUA_JUDGE_*` env vars (`provider`, `model`, `base_url`,
+  `api_key`, `timeout`, `rubric`, `enabled`, `debug`)
+
+Host-project adapter fixtures (overridable in your conftest):
+
+| Fixture | Purpose | Default |
+|---|---|---|
+| `aqua_judge_config` | Judge settings for the evaluators | `AQUA_JUDGE_*` env vars |
+| `aqua_hallucination_extractor` | `callable(ai_output, tool_outputs) -> mismatches` | `None` (gate disabled) |
+| `ai_assistant` | System under test (`process_user_query` + `trace_collector`) | required |
+
+`config.yaml`'s `judge_*` keys and `tests/conftest.py`'s `aqua_judge_config`
+bridge GeoNames' config file into the framework; a fresh project can rely on
+the env-var defaults alone.
 
 ## Project Structure
 
@@ -68,22 +99,24 @@ GeoNames/
 │   ├── config_loader.py # Configuration loading from YAML
 │   ├── factory.py       # Assistant factory function
 │   ├── models/          # Data models (Location, AssistantPlan, etc.)
+│   ├── tracing.py       # Project TestTraceCollector (based on aqua.tracing)
 │   └── services/        # Core services (intent parser, assistant, APIs)
+├── aqua/                # Standalone AQuA golden-anchor framework (pip-installable)
+│   ├── src/aqua/        #   evaluators, judge, reporting, plugin, CLI, ...
+│   └── tests/           #   framework's own test suite
 ├── tests/
 │   ├── unit/            # Fast unit tests (mocks, no network)
 │   ├── services/        # Service-level integration tests
 │   ├── user_flows/      # End-to-end user journey tests
-│   ├── ai_assistant/    # Golden anchor evaluation framework
-│   ├── test_utils/      # Shared test utilities and AQuA framework
-│   ├── conftest.py      # Pytest fixtures
+│   ├── ai_assistant/    # Golden anchor evaluation tests (thin host wiring)
+│   ├── test_utils/      # Shared test utilities (project-specific helpers)
+│   ├── conftest.py      # Project fixtures + AQuA adapter fixtures
 │   └── data/
 │       └── golden_anchor.json  # AQuA test cases (GN-001 to GN-025)
-├── scripts/
-│   └── render_dashboard.py  # Generate KPI HTML dashboard
 ├── config/
 │   ├── config.yaml          # Local config (gitignored)
 │   └── config.example.yaml  # Template config
-└── reports/                # Generated test reports (gitignored)
+└── reports/                # Generated test reports
 ```
 
 ## Dependencies

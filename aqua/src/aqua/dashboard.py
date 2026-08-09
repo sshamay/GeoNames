@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Render a self-contained AQuA KPI dashboard from reports/latest.json + history.jsonl.
 
-Reads the AQuA run ledger written by tests/test_utils/aqua_reporting.py and
-emits a single self-contained HTML file with:
+Reads the AQuA run ledger written by aqua.reporting and emits a single
+self-contained HTML file with:
 
   - headline KPI cards (pass rate, escape rate, confidence mean, sent to
     HITL, intent accuracy, hallucination rate)
@@ -15,7 +15,7 @@ Charts are inline SVG generated at build time (no CDN, no JS libraries), so the
 dashboard renders offline in any browser.
 
 Usage:
-    python scripts/render_dashboard.py [--report-dir reports] [--out reports/dashboard.html]
+    aqua dashboard [--report-dir reports] [--out reports/dashboard.html]
 
 Stdlib only.
 """
@@ -368,14 +368,10 @@ def render(report_dir: str, out_path: str) -> str:
     return out_path
 
 
-def main() -> None:
+def dashboard_main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--report-dir", default="reports")
     parser.add_argument("--out", default=os.path.join("reports", "dashboard.html"))
     args = parser.parse_args()
     out = render(args.report_dir, args.out)
     print(f"Dashboard written to {out}")
-
-
-if __name__ == "__main__":
-    main()

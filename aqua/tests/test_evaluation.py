@@ -2,7 +2,7 @@
 
 import pytest
 
-from test_utils.aqua_evaluation import (
+from aqua.evaluation import (
     AQuAEvaluators,
     EXPECTED_OUTCOME_SEMANTIC_THRESHOLD,
     LLM_JUDGE_PASS_THRESHOLD,
