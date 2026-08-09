@@ -45,6 +45,7 @@ def test_judge_config_loaded_from_yaml(tmp_path):
         "defaults:\n"
         "  app_name: geonames\n"
         "  judge_enabled: true\n"
+        "  judge_provider: ollama\n"
         "  judge_base_url: http://localhost:11434/v1\n"
         "  judge_model: llama3.2:3b\n"
         "  judge_api_key: ollama\n"
@@ -55,6 +56,7 @@ def test_judge_config_loaded_from_yaml(tmp_path):
     )
     settings = load_config(env="test", config_path=config_file)
     assert settings.judge_enabled is True
+    assert settings.judge_provider == "ollama"
     assert settings.judge_base_url == "http://localhost:11434/v1"
     assert settings.judge_model == "llama3.2:3b"
     assert settings.judge_api_key == "ollama"
@@ -70,6 +72,7 @@ def test_judge_fallback_defaults_without_keys(tmp_path):
     config_file.write_text("defaults:\n  app_name: geonames\nenvs:\n  test:\n")
     settings = load_config(env="test", config_path=config_file)
     assert settings.judge_enabled is False
+    assert settings.judge_provider == "openai_compatible"
     assert settings.judge_base_url is None
     assert settings.judge_model is None
     assert settings.judge_api_key is None

@@ -163,22 +163,57 @@ class _OpenAIJudge:
         return verdict
 
 
-def build_llm_judge(settings: Settings) -> Optional[JudgeFn]:
-    """Build the P6 judge hook from settings, or ``None`` when not enabled.
+# Provider names each judge factory registers under. The default
+# "openai_compatible" covers any Bearer-auth /chat/completions endpoint
+# (AI Horde, Ollama, local proxies) but requires explicit base_url/model/key.
+_JUDGE_PROVIDER_DEFAULTS = {
+    "openai_compatible": {"base_url": None, "api_key": None},
+    "openai": {"base_url": "https://api.openai.com/v1", "api_key": None},
+    "aihorde": {"base_url": "https://oai.aihorde.net/v1", "api_key": "0000000000"},
+    "ollama": {"base_url": "http://localhost:11434/v1", "api_key": "ollama"},
+}
 
-    Requires ``judge_enabled`` plus a base URL, model, and API key. When any of
-    those is missing the judge is disabled and the framework keeps its
-    deterministic fail-below-threshold behavior.
+
+def _build_judge(settings: Settings, provider: str) -> Optional[JudgeFn]:
+    """Build an OpenAI-compatible judge for ``provider`` using its defaults.
+
+    Provider-specific base_url/api_key defaults apply when the flat config keys
+    are left empty; the model is always required (there is no sane default).
+    Returns None (fail closed) when the judge is underconfigured.
     """
-    if not settings.judge_enabled:
-        return None
-    if not settings.judge_base_url or not settings.judge_model or not settings.judge_api_key:
+    defaults = _JUDGE_PROVIDER_DEFAULTS[provider]
+    base_url = settings.judge_base_url or defaults["base_url"]
+    api_key = settings.judge_api_key or defaults["api_key"]
+    if not base_url or not settings.judge_model or not api_key:
         return None
     return _OpenAIJudge(
-        base_url=settings.judge_base_url,
+        base_url=base_url,
         model=settings.judge_model,
-        api_key=settings.judge_api_key,
+        api_key=api_key,
         timeout=settings.judge_timeout,
         rubric=settings.judge_rubric,
         debug=settings.judge_debug,
     )
+
+
+def build_llm_judge(settings: Settings) -> Optional[JudgeFn]:
+    """Build the P6 judge hook from settings, or ``None`` when not enabled.
+
+    ``settings.judge_provider`` selects which provider factory builds the
+    client; each provider applies its own base_url/api_key defaults, so only
+    the model (and any non-default values) need to be set in config. An
+    unknown provider name is a config error and raises rather than silently
+    disabling the judge.
+
+    Requires ``judge_enabled``. When the selected provider is underconfigured
+    the judge is disabled and the framework keeps its deterministic
+    fail-below-threshold behavior.
+    """
+    if not settings.judge_enabled:
+        return None
+    if settings.judge_provider not in _JUDGE_PROVIDER_DEFAULTS:
+        raise ValueError(
+            f"Unknown judge_provider '{settings.judge_provider}'. "
+            f"Known providers: {sorted(_JUDGE_PROVIDER_DEFAULTS)}"
+        )
+    return _build_judge(settings, settings.judge_provider)

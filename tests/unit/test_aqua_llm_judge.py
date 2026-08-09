@@ -11,6 +11,7 @@ def _settings(**overrides):
         app_name="geonames",
         env="test",
         judge_enabled=True,
+        judge_provider="openai_compatible",
         judge_base_url="https://api.example.com/v1",
         judge_model="judge-model",
         judge_api_key="secret",
@@ -36,6 +37,78 @@ def test_build_llm_judge_returns_none_when_underconfigured(missing):
 def test_build_llm_judge_returns_callable_when_configured():
     judge = build_llm_judge(_settings())
     assert callable(judge)
+
+
+@pytest.mark.unit
+def test_build_llm_judge_unknown_provider_raises():
+    with pytest.raises(ValueError, match="Unknown judge_provider 'nonexistent'"):
+        build_llm_judge(_settings(judge_provider="nonexistent"))
+
+
+@pytest.mark.unit
+def test_ollama_provider_applies_defaults(mocker):
+    response = mocker.Mock()
+    response.json.return_value = {
+        "choices": [{"message": {"content": '{"score": 0.5, "reason": "ok"}'}}]
+    }
+    post = mocker.patch("requests.post", return_value=response)
+
+    judge = build_llm_judge(_settings(
+        judge_provider="ollama", judge_base_url=None, judge_api_key=None))
+    assert callable(judge)
+    judge("reply", "golden", [])
+
+    call = post.call_args
+    assert call.args[0] == "http://localhost:11434/v1/chat/completions"
+    assert call.kwargs["headers"]["Authorization"] == "Bearer ollama"
+
+
+@pytest.mark.unit
+def test_ollama_provider_requires_model():
+    assert build_llm_judge(_settings(
+        judge_provider="ollama", judge_base_url=None, judge_api_key=None, judge_model=None)) is None
+
+
+@pytest.mark.unit
+def test_aihorde_provider_applies_defaults(mocker):
+    response = mocker.Mock()
+    response.json.return_value = {
+        "choices": [{"message": {"content": '{"score": 0.5, "reason": "ok"}'}}]
+    }
+    post = mocker.patch("requests.post", return_value=response)
+
+    judge = build_llm_judge(_settings(
+        judge_provider="aihorde", judge_base_url=None, judge_api_key=None))
+    assert callable(judge)
+    judge("reply", "golden", [])
+
+    call = post.call_args
+    assert call.args[0] == "https://oai.aihorde.net/v1/chat/completions"
+    assert call.kwargs["headers"]["Authorization"] == "Bearer 0000000000"
+
+
+@pytest.mark.unit
+def test_openai_provider_requires_api_key():
+    assert build_llm_judge(_settings(
+        judge_provider="openai", judge_base_url=None, judge_api_key=None)) is None
+
+
+@pytest.mark.unit
+def test_openai_provider_applies_default_base_url(mocker):
+    response = mocker.Mock()
+    response.json.return_value = {
+        "choices": [{"message": {"content": '{"score": 0.5, "reason": "ok"}'}}]
+    }
+    post = mocker.patch("requests.post", return_value=response)
+
+    judge = build_llm_judge(_settings(
+        judge_provider="openai", judge_base_url=None, judge_api_key="sk-real"))
+    assert callable(judge)
+    judge("reply", "golden", [])
+
+    call = post.call_args
+    assert call.args[0] == "https://api.openai.com/v1/chat/completions"
+    assert call.kwargs["headers"]["Authorization"] == "Bearer sk-real"
 
 
 @pytest.mark.unit

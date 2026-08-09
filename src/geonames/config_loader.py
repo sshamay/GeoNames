@@ -30,6 +30,7 @@ class Settings:
     assistant_max_rows: int = 5
     # AQuA P6 LLM-as-a-Judge (evaluation-time scoring; optional, off by default).
     judge_enabled: bool = False
+    judge_provider: str = "openai_compatible"
     judge_base_url: Optional[str] = None
     judge_model: Optional[str] = None
     judge_api_key: Optional[str] = None
@@ -83,6 +84,7 @@ def load_config(env: str = "dev", config_path: Optional[Path] = None) -> Setting
         geonames_timeout=merged.get("geonames_timeout", 30.0),
         assistant_max_rows=merged.get("assistant_max_rows", 5),
         judge_enabled=bool(merged.get("judge_enabled", False)),
+        judge_provider=merged.get("judge_provider", "openai_compatible"),
         judge_base_url=merged.get("judge_base_url") or None,
         judge_model=merged.get("judge_model") or None,
         judge_api_key=merged.get("judge_api_key") or None,
