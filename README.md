@@ -33,14 +33,18 @@ pytest -v
 
 1. Copy `config/config.example.yaml` to `config/config.yaml`
 2. Add your GeoNames username and API settings
-3. Optionally configure LLM judge endpoint (AI Horde default provided)
+3. Optionally configure the LLM judge. Pick a provider via `judge_provider`; each has its own defaults for `judge_base_url`/`judge_api_key`, so only `judge_model` (and any non-default values) need to be set:
+   - `judge_provider: aihorde` — keyless anonymous access at `https://oai.aihorde.net/v1`, API key `"0000000000"`, e.g. model `google/gemma-4-31b`
+   - `judge_provider: ollama` (recommended for offline/fast/privacy-safe runs) — defaults to `http://localhost:11434/v1` / `ollama`; run `ollama pull llama3.2:3b` once
+   - `judge_provider: openai` — defaults to `https://api.openai.com/v1`; needs a real API key
+   - `judge_provider: openai_compatible` (default) — any other Bearer-auth `/chat/completions` endpoint; `judge_base_url` and `judge_api_key` are required
 
 ## Dashboard
 
 The dashboard is generated automatically at the end of every golden anchor test run (`reports/dashboard.html`). Open it with:
 
 ```bash
-open reports/dashboard.html
+open reports/dashboard.html (using prefered browser)
 ```
 
 To regenerate the dashboard from an existing run without re-running tests:

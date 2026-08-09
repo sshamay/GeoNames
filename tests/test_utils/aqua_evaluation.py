@@ -378,12 +378,17 @@ class AQuAEvaluators:
                 score = verdict.get("score")
                 if not isinstance(score, (int, float)) or not 0.0 <= score <= 1.0:
                     score = 0.0
-                return {
+                check = {
                     "check_name": "llm_judge",
                     "status": "PASSED" if score >= LLM_JUDGE_PASS_THRESHOLD else "FAILED",
                     "score": score,
                     "reason": f"LLM judge verdict ({score:.2f}): {verdict.get('reason') or 'no rationale'}",
                 }
+                # judge_debug mode: persist the raw model output so a run can be
+                # inspected when the parsed verdict looks wrong.
+                if "raw" in verdict:
+                    check["raw_judge_output"] = verdict["raw"]
+                return check
             return {"check_name": "expected_outcome", "status": "FAILED", "score": 0.0,
                     "reason": f"Semantic similarity {similarity:.3f} below threshold {EXPECTED_OUTCOME_SEMANTIC_THRESHOLD}."}
 
