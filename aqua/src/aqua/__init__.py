@@ -14,7 +14,10 @@ from aqua.evaluation import AQuAEvaluators
 from aqua.judge import build_llm_judge
 from aqua.reporting import AQuARunLedger
 
+__version__ = "0.1.0"
+
 __all__ = [
+    "__version__",
     "AQuAEvaluators",
     "AQuARunLedger",
     "JudgeConfig",
