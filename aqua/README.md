@@ -10,11 +10,24 @@ any project. No host-project code or config leaks into the framework.
 
 ## Installation
 
-```bash
-# From this repository (editable, for development)
-pip install -e ./aqua
+The simplest way to use AQuA in your project — copy the `aqua/` directory
+alongside your repo and install it in editable mode:
 
-# From a built wheel / PyPI
+```sh
+# Copy the framework into your project
+cp -r /path/to/aqua ./aqua
+
+# Install in editable mode (no build step, edits take effect immediately)
+pip install -e ./aqua
+```
+
+That's it. The pytest plugin auto-registers, the `aqua` CLI becomes available,
+and your golden-anchor tests just work.
+
+Other options:
+
+```bash
+# From a built wheel / PyPI (when published)
 pip install aqua
 
 # Dev dependencies (pytest, pytest-mock) for running the framework's own tests
