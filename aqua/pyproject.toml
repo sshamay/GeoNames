@@ -1,0 +1,64 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aqua"
+version = "0.1.0"
+description = "AQuA: a portable AI quality engineering framework for golden-anchor evaluation"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    { name = "sshamay", email = "48283773+sshamay@users.noreply.github.com" },
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Software Development :: Testing",
+    "Framework :: Pytest",
+]
+dependencies = [
+    "requests>=2.31",
+]
+
+[project.urls]
+Homepage = "https://github.com/sshamay/GeoNames/tree/main/aqua"
+Repository = "https://github.com/sshamay/GeoNames"
+Issues = "https://github.com/sshamay/GeoNames/issues"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "pytest-mock>=3.10",
+]
+
+[project.entry-points.pytest11]
+aqua = "aqua.plugin"
+
+[project.scripts]
+aqua = "aqua.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+aqua = [
+    "sample_golden_anchor.json",
+    "aqua_config.example.py",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "unit: fast, isolated tests with mocks (no network)",
+]
+addopts = "-ra --strict-markers"

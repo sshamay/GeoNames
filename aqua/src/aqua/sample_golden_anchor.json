@@ -1,0 +1,150 @@
+[
+  {
+    "case_id": "GA-001",
+    "scenario": "Real query: the assistant answers a combined question covering two domains",
+    "user_input": "Any recent earthquakes or bad weather near Sacramento?",
+    "required_keywords": [
+      "recent earthquakes",
+      "weather observations",
+      "near Sacramento"
+    ],
+    "forbidden_keywords": [],
+    "required_tools": [
+      {
+        "name": "earthquakes",
+        "parameters": {
+          "north": 39.48,
+          "south": 37.68,
+          "east": -120.34,
+          "west": -122.65
+        }
+      },
+      {
+        "name": "weather",
+        "parameters": {
+          "north": 39.48,
+          "south": 37.68,
+          "east": -120.34,
+          "west": -122.65
+        }
+      }
+    ],
+    "forbidden_tools": [],
+    "expected_outcome": "Found 5 recent earthquakes (strongest magnitude 6.0) and weather observations from 5 stations near Sacramento.",
+    "threshold": 0.9
+  },
+  {
+    "case_id": "GA-002",
+    "scenario": "Tool gating: only the weather tool may run; the earthquakes tool is forbidden",
+    "user_input": "What is the weather like around San Francisco?",
+    "required_keywords": [
+      "weather observations",
+      "near San Francisco"
+    ],
+    "forbidden_keywords": [],
+    "required_tools": [
+      {
+        "name": "weather",
+        "parameters": {
+          "north": 38.68,
+          "south": 36.87,
+          "east": -121.28,
+          "west": -123.56
+        }
+      }
+    ],
+    "forbidden_tools": [
+      "earthquakes"
+    ],
+    "expected_outcome": "Found weather observations near San Francisco.",
+    "threshold": 0.9
+  },
+  {
+    "case_id": "GA-003",
+    "scenario": "Graceful fallback: a greeting gets guidance instead of an exception",
+    "user_input": "hi",
+    "required_keywords": [
+      "recent earthquakes",
+      "weather"
+    ],
+    "forbidden_keywords": [],
+    "required_tools": [],
+    "forbidden_tools": [],
+    "expected_outcome": "Hi, I'm a weather and earthquake assistant. Ask me about recent earthquakes or the weather near a city, for example 'Any recent earthquakes near Seattle?'.",
+    "threshold": 0.9
+  },
+  {
+    "case_id": "GA-004",
+    "scenario": "Adversarial: content_rules must fail because 'earthquake' is a required keyword",
+    "user_input": "Any rain around New York?",
+    "required_keywords": [
+      "weather observations",
+      "near New York",
+      "earthquake"
+    ],
+    "forbidden_keywords": [],
+    "required_tools": [
+      {
+        "name": "weather",
+        "parameters": {
+          "north": 41.61,
+          "south": 39.81,
+          "east": -72.82,
+          "west": -75.19
+        }
+      }
+    ],
+    "forbidden_tools": [],
+    "expected_outcome": "Found weather observations from 5 stations near New York.",
+    "threshold": 0.9
+  },
+  {
+    "case_id": "GA-005",
+    "scenario": "Adversarial hallucination demo: simulated_output fabricates a count the data does not support",
+    "user_input": "Any recent earthquakes near Seattle?",
+    "simulated_output": "Found 50 recent earthquakes (strongest magnitude 7.5) near Seattle.",
+    "required_keywords": [
+      "recent earthquakes",
+      "near Seattle"
+    ],
+    "forbidden_keywords": [],
+    "required_tools": [
+      {
+        "name": "earthquakes",
+        "parameters": {
+          "north": 48.51,
+          "south": 46.71,
+          "east": -121.00,
+          "west": -123.67
+        }
+      }
+    ],
+    "forbidden_tools": [],
+    "expected_outcome": "Found 50 recent earthquakes (strongest magnitude 7.5) near Seattle.",
+    "threshold": 0.9
+  },
+  {
+    "case_id": "GA-006",
+    "scenario": "Semantic mismatch: the expected outcome describes a severe storm; the real reply must fail the LLM-judge / HITL layers",
+    "user_input": "What is the weather like around Denver?",
+    "required_keywords": [
+      "weather",
+      "near Denver"
+    ],
+    "forbidden_keywords": [],
+    "required_tools": [
+      {
+        "name": "weather",
+        "parameters": {
+          "north": 40.64,
+          "south": 38.84,
+          "east": -103.82,
+          "west": -106.16
+        }
+      }
+    ],
+    "forbidden_tools": [],
+    "expected_outcome": "Severe thunderstorms with hail and winds up to 60 mph near Denver.",
+    "threshold": 0.9
+  }
+]

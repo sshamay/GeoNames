@@ -32,7 +32,7 @@ from test_utils.ground_truth_matching import (
     parse_emsc_events,
     parse_usgs_events,
 )
-from test_utils.aqua_test_data import load_cases
+from aqua.loaders import load_cases
 
 logger = logging.getLogger(__name__)
 

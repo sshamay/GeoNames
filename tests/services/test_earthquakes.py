@@ -1,7 +1,7 @@
 """Tests for the GeoNames earthquakes endpoint.
 
 Data-driven: bounding boxes, filter cases and assertions come from JSON files
-under tests/data/ (see tests/test_utils/aqua_test_data.py).
+under tests/data/ (see aqua.loaders).
 """
 
 from datetime import datetime
@@ -11,7 +11,7 @@ import pytest
 
 from geonames.clients import GeoNamesClient, GeoNamesClientError
 from geonames.models import EarthquakesResponse
-from test_utils.aqua_test_data import load_cases
+from aqua.loaders import load_cases
 
 DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 

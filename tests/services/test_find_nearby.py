@@ -6,7 +6,7 @@ Data-driven: invalid coordinate cases come from tests/data/find_nearby_invalid_c
 import pytest
 
 from geonames.models import StatusError
-from test_utils.aqua_test_data import load_cases
+from aqua.loaders import load_cases
 
 
 @pytest.mark.services

@@ -28,15 +28,6 @@ class Settings:
     geonames_base_url: str = "https://secure.geonames.org"
     geonames_timeout: float = 30.0
     assistant_max_rows: int = 5
-    # AQuA P6 LLM-as-a-Judge (evaluation-time scoring; optional, off by default).
-    judge_enabled: bool = False
-    judge_provider: str = "openai_compatible"
-    judge_base_url: Optional[str] = None
-    judge_model: Optional[str] = None
-    judge_api_key: Optional[str] = None
-    judge_timeout: float = 60.0
-    judge_rubric: str = "groundedness_and_completeness"
-    judge_debug: bool = False
 
 
 def _default_config_path() -> Path:
@@ -83,12 +74,4 @@ def load_config(env: str = "dev", config_path: Optional[Path] = None) -> Setting
         geonames_base_url=merged.get("geonames_base_url", "https://secure.geonames.org"),
         geonames_timeout=merged.get("geonames_timeout", 30.0),
         assistant_max_rows=merged.get("assistant_max_rows", 5),
-        judge_enabled=bool(merged.get("judge_enabled", False)),
-        judge_provider=merged.get("judge_provider", "openai_compatible"),
-        judge_base_url=merged.get("judge_base_url") or None,
-        judge_model=merged.get("judge_model") or None,
-        judge_api_key=merged.get("judge_api_key") or None,
-        judge_timeout=merged.get("judge_timeout", 60.0),
-        judge_rubric=merged.get("judge_rubric", "groundedness_and_completeness"),
-        judge_debug=bool(merged.get("judge_debug", False)),
     )

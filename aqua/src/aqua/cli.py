@@ -1,15 +1,21 @@
 #!/usr/bin/env python3
-"""Print an AI Quality Evaluation Report from the latest AQuA run.
+"""AQuA command-line interface.
 
 Usage:
-    python scripts/report.py
-    python scripts/report.py --run reports/aqua_run_20260704_120000.json
+    aqua report                # print AI quality report from reports/latest.json
+    aqua report --run <path>   # print report from a specific run JSON
+    aqua dashboard             # render reports/dashboard.html
 """
 
+from __future__ import annotations
+
+import argparse
 import json
 import pathlib
 import sys
 from datetime import datetime, timezone
+
+from aqua.dashboard import dashboard_main
 
 
 def _fmt_pct(value):
@@ -25,7 +31,7 @@ def _fmt_count(label, value):
 
 
 def render_report(report_path):
-    """Read a JSON report and print the styled summary."""
+    """Read a JSON report and return the styled summary text."""
     with open(report_path) as f:
         report = json.load(f)
 
@@ -37,38 +43,25 @@ def render_report(report_path):
     lines.append("=" * 40)
     lines.append("")
 
-    # Counts
     total = totals.get("total", 0)
-    passed = totals.get("passed", 0)
-    failed = totals.get("failed", 0)
-
     lines.append(_fmt_count("Total Scenarios", total))
     lines.append("")
 
-    # Quality dimensions
     intent = kpis.get("intent_accuracy", {})
     agent_logic = kpis.get("per_check", {}).get("agent_logic", {})
     rules = kpis.get("per_check", {}).get("content_rules", {})
     halluc = kpis.get("hallucination_rate", {})
 
-    intent_rate = _fmt_pct(intent.get("rate"))
-    tool_sel = _fmt_pct(agent_logic.get("pass_rate"))
-    rules_rate = _fmt_pct(rules.get("pass_rate"))
-    halluc_rate = _fmt_pct(halluc.get("rate"))
-
-    lines.append(f"Intent Accuracy:        {intent_rate}")
-    lines.append(f"Tool Selection Accuracy: {tool_sel}")
-    lines.append(f"Business Rules:         {rules_rate}")
-    lines.append(f"Hallucination Rate:     {halluc_rate}")
+    lines.append(f"Intent Accuracy:        {_fmt_pct(intent.get('rate'))}")
+    lines.append(f"Tool Selection Accuracy: {_fmt_pct(agent_logic.get('pass_rate'))}")
+    lines.append(f"Business Rules:         {_fmt_pct(rules.get('pass_rate'))}")
+    lines.append(f"Hallucination Rate:     {_fmt_pct(halluc.get('rate'))}")
     lines.append("")
 
-    # Overall quality score
     agg = kpis.get("aggregate_confidence", {})
-    overall = _fmt_pct(agg.get("mean"))
-    lines.append(f"Overall Quality Score:  {overall}")
+    lines.append(f"Overall Quality Score:  {_fmt_pct(agg.get('mean'))}")
     lines.append("")
 
-    # Failed scenarios
     failed_cases = kpis.get("failed_cases", [])
     if failed_cases:
         lines.append("Failed Scenarios:")
@@ -84,15 +77,13 @@ def render_report(report_path):
     return "\n".join(lines)
 
 
-def main():
-    report_path = None
-    if len(sys.argv) > 1 and sys.argv[1] != "--run":
-        report_path = sys.argv[1]
-    elif "--run" in sys.argv:
-        idx = sys.argv.index("--run")
-        if idx + 1 < len(sys.argv):
-            report_path = sys.argv[idx + 1]
+def report_main() -> None:
+    """Print the styled AI quality report (argparse-friendly)."""
+    parser = argparse.ArgumentParser(description="Print the AI quality report.")
+    parser.add_argument("--run", default=None, help="Path to a run JSON (default: reports/latest.json)")
+    args = parser.parse_args()
 
+    report_path = args.run
     if report_path is None:
         latest = pathlib.Path("reports/latest.json")
         if latest.exists():
@@ -104,5 +95,17 @@ def main():
     print(render_report(report_path))
 
 
-if __name__ == "__main__":
-    main()
+def main() -> None:
+    parser = argparse.ArgumentParser(description="AQuA tooling", prog="aqua")
+    sub = parser.add_subparsers(dest="command", required=True)
+    sub.add_parser("report", help="print the AI quality report from the latest run")
+    sub.add_parser("dashboard", help="render reports/dashboard.html")
+    args = parser.parse_args()
+
+    # The sub-commands have their own argparsers; drop the command token so
+    # their remaining arguments parse cleanly.
+    sys.argv = [sys.argv[0], *sys.argv[2:]]
+    if args.command == "dashboard":
+        dashboard_main()
+    else:
+        report_main()
