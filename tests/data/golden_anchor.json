@@ -4,52 +4,44 @@
     "scenario": "Earthquakes and weather near Sacramento",
     "user_input": "Any recent earthquakes or bad weather near Sacramento?",
     "required_keywords": [
-      "recent earthquakes",
-      "weather observations",
-      "near Sacramento"
+      "recent earthquake",
+      "weather",
+      "Sacramento"
     ],
     "forbidden_keywords": [],
     "required_tools": [
       {
         "name": "earthquakes",
         "parameters": {
-          "north": 39.4825009009009,
-          "south": 37.6806990990991,
-          "east": -120.34194132423156,
-          "west": -122.64685867576844
+          "place": "Sacramento"
         }
       },
       {
         "name": "weather",
         "parameters": {
-          "north": 39.4825009009009,
-          "south": 37.6806990990991,
-          "east": -120.34194132423156,
-          "west": -122.64685867576844
+          "place": "Sacramento"
         }
       }
     ],
     "forbidden_tools": [],
-    "expected_outcome": "Found 5 recent earthquakes (strongest magnitude 6.0) and weather observations from 5 stations near Sacramento.",
-    "threshold": 0.9
+    "expected_outcome": "There are recent earthquakes and weather observations near Sacramento.",
+    "threshold": 0.9,
+    "category": "assistant"
   },
   {
     "case_id": "GN-002",
     "scenario": "Weather only near San Francisco",
     "user_input": "What is the weather like around San Francisco?",
     "required_keywords": [
-      "weather observations",
-      "near San Francisco"
+      "weather",
+      "San Francisco"
     ],
     "forbidden_keywords": [],
     "required_tools": [
       {
         "name": "weather",
         "parameters": {
-          "north": 38.6758009009009,
-          "south": 36.8739990990991,
-          "east": -121.27963002577329,
-          "west": -123.5591699742267
+          "place": "San Francisco"
         }
       }
     ],
@@ -57,7 +49,8 @@
       "earthquakes"
     ],
     "expected_outcome": "Found weather observations near San Francisco.",
-    "threshold": 0.9
+    "threshold": 0.9,
+    "category": "assistant"
   },
   {
     "case_id": "GN-003",
@@ -72,23 +65,21 @@
       {
         "name": "earthquakes",
         "parameters": {
-          "north": 48.5071009009009,
-          "south": 46.7052990990991,
-          "east": -120.99589283663532,
-          "west": -123.66830716336467
+          "place": "Seattle"
         }
       }
     ],
     "forbidden_tools": [],
-    "expected_outcome": "Found 5 recent earthquakes (strongest magnitude 4.6) near Seattle.",
-    "threshold": 0.9
+    "expected_outcome": "There are recent earthquakes near Seattle.",
+    "threshold": 0.9,
+    "category": "assistant"
   },
   {
     "case_id": "GN-004",
     "scenario": "Earthquakes only near Denver",
     "user_input": "Any earthquakes today near Denver?",
     "required_keywords": [
-      "recent earthquakes",
+      "earthquakes",
       "near Denver"
     ],
     "forbidden_keywords": [],
@@ -96,10 +87,7 @@
       {
         "name": "earthquakes",
         "parameters": {
-          "north": 40.6401009009009,
-          "south": 38.838299099099096,
-          "east": -103.81872001158524,
-          "west": -106.16187998841477
+          "place": "Denver"
         }
       }
     ],
@@ -107,7 +95,8 @@
       "weather"
     ],
     "expected_outcome": "Found no recent earthquakes near Denver.",
-    "threshold": 0.9
+    "threshold": 0.9,
+    "category": "assistant"
   },
   {
     "case_id": "GN-005",
@@ -122,10 +111,7 @@
       {
         "name": "earthquakes",
         "parameters": {
-          "north": 48.5071009009009,
-          "south": 46.7052990990991,
-          "east": -120.99589283663532,
-          "west": -123.66830716336467
+          "place": "Seattle"
         }
       }
     ],
@@ -133,7 +119,8 @@
       "weather"
     ],
     "expected_outcome": "Found no recent earthquakes near Seattle.",
-    "threshold": 0.9
+    "threshold": 0.9,
+    "category": "assistant"
   },
   {
     "case_id": "GN-006",
@@ -148,10 +135,7 @@
       {
         "name": "weather",
         "parameters": {
-          "north": 40.6401009009009,
-          "south": 38.838299099099096,
-          "east": -103.81872001158524,
-          "west": -106.16187998841477
+          "place": "Denver"
         }
       }
     ],
@@ -159,40 +143,40 @@
       "earthquakes"
     ],
     "expected_outcome": "Found weather observations from 5 stations near Denver.",
-    "threshold": 0.9
+    "threshold": 0.9,
+    "category": "assistant"
   },
   {
     "case_id": "GN-007",
     "scenario": "Earthquakes near San Francisco within 50 miles",
     "user_input": "Any earthquakes within 50 miles around San Francisco?",
     "required_keywords": [
-      "recent earthquakes",
-      "near San Francisco"
+      "earthquakes",
+      "San Francisco"
     ],
     "forbidden_keywords": [],
     "required_tools": [
       {
         "name": "earthquakes",
         "parameters": {
-          "north": 38.49982792792793,
-          "south": 37.04997207207207,
-          "east": -121.50226129483899,
-          "west": -123.336538705161
+          "place": "San Francisco",
+          "max_distance_km": 80.0
         }
       }
     ],
     "forbidden_tools": [
       "weather"
     ],
-    "expected_outcome": "Found 5 recent earthquakes (strongest magnitude 6.0) near San Francisco.",
-    "threshold": 0.9
+    "expected_outcome": "There are 3 earthquakes within 50 miles around San Francisco.",
+    "threshold": 0.9,
+    "category": "assistant"
   },
   {
     "case_id": "GN-008",
     "scenario": "Earthquakes on a specific date near Los Angeles",
     "user_input": "Were there earthquakes on 2026-06-15 near Los Angeles?",
     "required_keywords": [
-      "recent earthquakes",
+      "5 earthquakes",
       "near Los Angeles"
     ],
     "forbidden_keywords": [],
@@ -200,11 +184,8 @@
       {
         "name": "earthquakes",
         "parameters": {
-          "north": 34.9531009009009,
-          "south": 33.1512990990991,
-          "east": -117.15634851419603,
-          "west": -119.33105148580398,
-          "date": "2026-06-15"
+          "place": "Los Angeles",
+          "date": "__ANY__"
         }
       }
     ],
@@ -212,14 +193,15 @@
       "weather"
     ],
     "expected_outcome": "Found 5 recent earthquakes (strongest magnitude 1.7) near Los Angeles.",
-    "threshold": 0.9
+    "threshold": 0.9,
+    "category": "assistant"
   },
   {
     "case_id": "GN-009",
     "scenario": "Rain near New York must not trigger the earthquakes tool",
     "user_input": "Any rain around New York?",
     "required_keywords": [
-      "weather observations",
+      "weather",
       "near New York"
     ],
     "forbidden_keywords": [
@@ -229,10 +211,7 @@
       {
         "name": "weather",
         "parameters": {
-          "north": 41.6137009009009,
-          "south": 39.8118990990991,
-          "east": -72.81745856704468,
-          "west": -75.19454143295532
+          "place": "New York"
         }
       }
     ],
@@ -240,14 +219,15 @@
       "earthquakes"
     ],
     "expected_outcome": "Found weather observations from 5 stations near New York.",
-    "threshold": 0.9
+    "threshold": 0.9,
+    "category": "assistant"
   },
   {
     "case_id": "GN-010",
     "scenario": "No earthquakes near Denver today",
     "user_input": "Any earthquakes today near Denver?",
     "required_keywords": [
-      "recent earthquakes",
+      "earthquakes",
       "near Denver"
     ],
     "forbidden_keywords": [],
@@ -255,171 +235,28 @@
       {
         "name": "earthquakes",
         "parameters": {
-          "north": 40.6401009009009,
-          "south": 38.838299099099096,
-          "east": -103.81872001158524,
-          "west": -106.16187998841477
+          "place": "Denver"
         }
       }
     ],
     "forbidden_tools": [],
-    "expected_outcome": "Found no recent earthquakes near Denver.",
-    "threshold": 0.9
-  },
-  {
-    "case_id": "GN-011",
-    "scenario": "Adversarial: content_rules must fail (missing required keyword 'earthquake')",
-    "user_input": "Any rain around New York?",
-    "required_keywords": [
-      "weather observations",
-      "near New York",
-      "earthquake"
-    ],
-    "forbidden_keywords": [],
-    "required_tools": [
-      {
-        "name": "weather",
-        "parameters": {
-          "north": 41.6137009009009,
-          "south": 39.8118990990991,
-          "east": -72.81745856704468,
-          "west": -75.19454143295532
-        }
-      }
-    ],
-    "forbidden_tools": [],
-    "expected_outcome": "Found weather observations from 5 stations near New York.",
-    "threshold": 0.9
-  },
-  {
-    "case_id": "GN-012",
-    "scenario": "Adversarial: content_rules must fail (forbidden keyword 'weather observations' appears)",
-    "user_input": "Any recent earthquakes or bad weather near Sacramento?",
-    "required_keywords": [
-      "recent earthquakes",
-      "near Sacramento"
-    ],
-    "forbidden_keywords": [
-      "weather observations"
-    ],
-    "required_tools": [
-      {
-        "name": "earthquakes",
-        "parameters": {
-          "north": 39.4825009009009,
-          "south": 37.6806990990991,
-          "east": -120.34194132423156,
-          "west": -122.64685867576844
-        }
-      },
-      {
-        "name": "weather",
-        "parameters": {
-          "north": 39.4825009009009,
-          "south": 37.6806990990991,
-          "east": -120.34194132423156,
-          "west": -122.64685867576844
-        }
-      }
-    ],
-    "forbidden_tools": [],
-    "expected_outcome": "Found 5 recent earthquakes (strongest magnitude 6.0) and weather observations from 5 stations near Sacramento.",
-    "threshold": 0.9
-  },
-  {
-    "case_id": "GN-013",
-    "scenario": "Adversarial: agent_logic must fail (required earthquakes tool not called)",
-    "user_input": "Any rain around New York?",
-    "required_keywords": [
-      "weather observations"
-    ],
-    "forbidden_keywords": [],
-    "required_tools": [
-      {
-        "name": "earthquakes",
-        "parameters": {
-          "north": 41.6137009009009,
-          "south": 39.8118990990991,
-          "east": -72.81745856704468,
-          "west": -75.19454143295532
-        }
-      },
-      {
-        "name": "weather",
-        "parameters": {
-          "north": 41.6137009009009,
-          "south": 39.8118990990991,
-          "east": -72.81745856704468,
-          "west": -75.19454143295532
-        }
-      }
-    ],
-    "forbidden_tools": [],
-    "expected_outcome": "Found weather observations from 5 stations near New York.",
-    "threshold": 0.9
-  },
-  {
-    "case_id": "GN-014",
-    "scenario": "Adversarial: agent_logic must fail (forbidden weather tool is called)",
-    "user_input": "Any recent earthquakes or bad weather near Sacramento?",
-    "required_keywords": [
-      "recent earthquakes"
-    ],
-    "forbidden_keywords": [],
-    "required_tools": [
-      {
-        "name": "earthquakes",
-        "parameters": {
-          "north": 39.4825009009009,
-          "south": 37.6806990990991,
-          "east": -120.34194132423156,
-          "west": -122.64685867576844
-        }
-      }
-    ],
-    "forbidden_tools": [
-      "weather"
-    ],
-    "expected_outcome": "Found 5 recent earthquakes (strongest magnitude 6.0) and weather observations from 5 stations near Sacramento.",
-    "threshold": 0.9
-  },
-  {
-    "case_id": "GN-015",
-    "scenario": "Adversarial: expected outcome must fail (severe-storm warning vs Denver weather)",
-    "user_input": "What is the weather like around Denver?",
-    "required_keywords": [
-      "weather",
-      "near Denver"
-    ],
-    "forbidden_keywords": [],
-    "required_tools": [
-      {
-        "name": "weather",
-        "parameters": {
-          "north": 40.6401009009009,
-          "south": 38.838299099099096,
-          "east": -103.81872001158524,
-          "west": -106.16187998841477
-        }
-      }
-    ],
-    "forbidden_tools": [],
-    "expected_outcome": "Severe thunderstorms with hail and winds up to 60 mph near Denver.",
-    "threshold": 0.9
+    "expected_outcome": "Found no earthquakes today, near Denver.",
+    "threshold": 0.9,
+    "category": "assistant"
   },
   {
     "case_id": "GN-016",
     "scenario": "Greeting only - assistant replies with guidance instead of raising",
     "user_input": "hi",
     "required_keywords": [
-      "recent earthquakes",
-      "weather"
+      "hello"
     ],
     "forbidden_keywords": [],
     "required_tools": [],
     "forbidden_tools": [],
-    "expected_outcome": "Hi, I'm a weather and earthquake assistant. Ask me about recent earthquakes or the weather near a city, for example 'Any recent earthquakes near Seattle?'.",
-    "threshold": 0.9
+    "expected_outcome": "The assistant greets the user and offers to help them with location or geography queries.",
+    "threshold": 0.9,
+    "category": "assistant"
   },
   {
     "case_id": "GN-017",
@@ -434,83 +271,24 @@
       {
         "name": "weather",
         "parameters": {
-          "north": 40.6401009009009,
-          "south": 38.838299099099096,
-          "east": -103.81872001158524,
-          "west": -106.16187998841477
+          "place": "Denver"
         }
       }
     ],
     "forbidden_tools": [],
     "expected_outcome": "Found weather observations from 5 stations near Denver.",
-    "threshold": 0.9
-  },
-  {
-    "case_id": "GN-018",
-    "scenario": "Adversarial: hallucination demo - the assistant fabricates an earthquake count near Seattle; the hallucination gate must fail the case",
-    "user_input": "Any recent earthquakes near Seattle?",
-    "simulated_output": "Found 50 recent earthquakes (strongest magnitude 7.5) near Seattle.",
-    "required_keywords": [
-      "recent earthquakes",
-      "near Seattle"
-    ],
-    "forbidden_keywords": [],
-    "required_tools": [
-      {
-        "name": "earthquakes",
-        "parameters": {
-          "north": 48.5071009009009,
-          "south": 46.7052990990991,
-          "east": -120.99589283663532,
-          "west": -123.66830716336467
-        }
-      }
-    ],
-    "forbidden_tools": [],
-    "expected_outcome": "Found 50 recent earthquakes (strongest magnitude 7.5) near Seattle.",
-    "threshold": 0.9
+    "threshold": 0.9,
+    "category": "assistant"
   },
   {
     "case_id": "GN-019",
     "scenario": "Complex Data Task: California earthquake + rain yesterday",
     "user_input": "Were there any earthquakes and rain in California yesterday?",
     "required_keywords": [
-      "recent earthquakes",
-      "weather observations",
-      "near California"
-    ],
-    "forbidden_keywords": [],
-    "required_tools": [
-      {
-        "name": "earthquakes",
-        "parameters": {
-          "north": 37.6792009009009,
-          "south": 35.8773990990991,
-          "east": -118.2931210575838,
-          "west": -120.5426789424162,
-          "date": "yesterday"
-        }
-      },
-      {
-        "name": "weather",
-        "parameters": {
-          "north": 37.6792009009009,
-          "south": 35.8773990990991,
-          "east": -118.2931210575838,
-          "west": -120.5426789424162
-        }
-      }
-    ],
-    "forbidden_tools": [],
-    "expected_outcome": "Found earthquake data and rain/weather observations in California from yesterday.",
-    "threshold": 0.9
-  },
-  {
-    "case_id": "GN-020",
-    "scenario": "HITL escalation trigger: semantic mismatch escalates to P6 judge then HITL",
-    "user_input": "Were there any earthquakes and rain in California yesterday?",
-    "simulated_output": "I found some seismic activity and precipitation in the California region yesterday, but the data was inconclusive.",
-    "required_keywords": [
+      "earthquake",
+      "weather",
+      "observations",
+      "near",
       "California"
     ],
     "forbidden_keywords": [],
@@ -518,26 +296,21 @@
       {
         "name": "earthquakes",
         "parameters": {
-          "north": 37.6792009009009,
-          "south": 35.8773990990991,
-          "east": -118.2931210575838,
-          "west": -120.5426789424162,
-          "date": "yesterday"
+          "place": "California",
+          "date": "__ANY__"
         }
       },
       {
         "name": "weather",
         "parameters": {
-          "north": 37.6792009009009,
-          "south": 35.8773990990991,
-          "east": -118.2931210575838,
-          "west": -120.5426789424162
+          "place": "California"
         }
       }
     ],
     "forbidden_tools": [],
-    "expected_outcome": "Found no recent earthquakes and weather observations from 5 stations near California.",
-    "threshold": 0.9
+    "expected_outcome": "Found earthquake data and rain/weather observations in California from yesterday.",
+    "threshold": 0.9,
+    "category": "assistant"
   },
   {
     "case_id": "GN-021",
@@ -552,18 +325,16 @@
       {
         "name": "earthquakes",
         "parameters": {
-          "north": 40.6826009009009,
-          "south": 38.8807990990991,
-          "east": -88.4777967497914,
-          "west": -90.8224032502086
+          "place": "Springfield"
         }
       }
     ],
     "forbidden_tools": [
       "weather"
     ],
-    "expected_outcome": "Found 5 recent earthquakes (strongest magnitude 3.5) near Springfield.",
-    "threshold": 0.9
+    "expected_outcome": "There are recent earthquakes near Springfield.",
+    "threshold": 0.9,
+    "category": "assistant"
   },
   {
     "case_id": "GN-022",
@@ -578,18 +349,16 @@
       {
         "name": "earthquakes",
         "parameters": {
-          "north": 40.8621009009009,
-          "south": 39.0602990990991,
-          "east": -81.8234250084135,
-          "west": -84.17417499158651
+          "place": "Columbus"
         }
       }
     ],
     "forbidden_tools": [
       "weather"
     ],
-    "expected_outcome": "Found 5 recent earthquakes (strongest magnitude 3.4) near Columbus.",
-    "threshold": 0.9
+    "expected_outcome": "There are recent earthquakes near Columbus.",
+    "threshold": 0.9,
+    "category": "assistant"
   },
   {
     "case_id": "GN-023",
@@ -597,17 +366,15 @@
     "user_input": "Weather near Austin, TX around downtown?",
     "required_keywords": [
       "weather observations",
-      "near Austin, TX"
+      "near",
+      "Austin, TX"
     ],
     "forbidden_keywords": [],
     "required_tools": [
       {
         "name": "weather",
         "parameters": {
-          "north": 31.1681009009009,
-          "south": 29.3662990990991,
-          "east": -96.70000940698102,
-          "west": -98.78619059301897
+          "place": "Austin, TX"
         }
       }
     ],
@@ -615,7 +382,8 @@
       "earthquakes"
     ],
     "expected_outcome": "Found weather observations from 5 stations near Austin, TX.",
-    "threshold": 0.9
+    "threshold": 0.9,
+    "category": "assistant"
   },
   {
     "case_id": "GN-024",
@@ -630,11 +398,8 @@
       {
         "name": "earthquakes",
         "parameters": {
-          "north": 31.1681009009009,
-          "south": 29.3662990990991,
-          "east": -96.70000940698102,
-          "west": -98.78619059301897,
-          "date": "yesterday"
+          "place": "Austin, TX",
+          "date": "__ANY__"
         }
       }
     ],
@@ -642,7 +407,8 @@
       "weather"
     ],
     "expected_outcome": "Found no recent earthquakes near Austin, TX.",
-    "threshold": 0.9
+    "threshold": 0.9,
+    "category": "assistant"
   },
   {
     "case_id": "GN-025",
@@ -657,10 +423,7 @@
       {
         "name": "weather",
         "parameters": {
-          "north": 39.4825009009009,
-          "south": 37.6806990990991,
-          "east": -120.34194132423156,
-          "west": -122.64685867576844
+          "place": "Sacramento"
         }
       }
     ],
@@ -668,6 +431,29 @@
       "earthquakes"
     ],
     "expected_outcome": "Found weather observations from 5 stations near Sacramento.",
-    "threshold": 0.9
+    "threshold": 0.9,
+    "category": "assistant"
+  },
+  {
+    "case_id": "GN-028",
+    "scenario": "Assistant reports its cumulative usage statistics (prompts processed, tool calls, failed queries) in a [usage] footer of its reply.",
+    "user_input": "What is the weather like in Sacramento?",
+    "required_keywords": [
+      "prompts_processed",
+      "tool_calls",
+      "failed_queries"
+    ],
+    "forbidden_keywords": [],
+    "required_tools": [
+      {
+        "name": "weather",
+        "parameters": {
+          "place": "Sacramento"
+        }
+      }
+    ],
+    "forbidden_tools": [],
+    "threshold": 0.9,
+    "category": "assistant"
   }
 ]

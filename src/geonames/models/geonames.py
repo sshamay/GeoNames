@@ -38,8 +38,10 @@ class Earthquake(BaseModel):
     @field_validator("magnitude")
     @classmethod
     def magnitude_in_range(cls, value: float) -> float:
-        if not 0 < value <= 10:
-            raise ValueError("magnitude must be in (0, 10]")
+        if value < 0:
+            return 0.0  # tolerate out-of-range API quirks (e.g. -0.49)
+        if value > 10:
+            return 10.0
         return value
 
     @field_validator("lat")
@@ -59,9 +61,12 @@ class Earthquake(BaseModel):
     @field_validator("depth")
     @classmethod
     def depth_non_negative(cls, value: float) -> float:
-        if value < 0:
-            raise ValueError("depth must be non-negative")
-        return value
+        # The API occasionally reports marginally negative depths (e.g. -0.48)
+        # for quakes whose hypocentre sits just above the reference ellipsoid.
+        # Like the magnitude quirk below, clamp these to 0 rather than rejecting
+        # the whole record, so a single measurement artifact cannot sink every
+        # earthquake query.
+        return max(value, 0.0)
 
 
 class EarthquakesResponse(BaseModel):
@@ -100,21 +105,35 @@ class FindNearbyResponse(BaseModel):
     status: Optional[StatusError] = None
 
 
+class SearchResponse(BaseModel):
+    """The full searchJSON response body (geocoding a place name)."""
+
+    geonames: List[Toponym]
+    status: Optional[StatusError] = None
+
+
 class WeatherObservation(BaseModel):
-    """A weather station observation from the weatherJSON endpoint."""
+    """A weather station observation from the weatherJSON endpoint.
+
+    Station fields are intentionally lenient: live GeoNames observations can be
+    missing or empty for some stations (e.g. no wind/cloud reporting), so only
+    the identity (stationName/ICAO) and location (lat/lng/observation) are
+    required. All meteorologic values default so a valid response never fails
+    validation on a partial observation.
+    """
 
     lng: float
     observation: str
-    ICAO: str
-    clouds: str
-    dewPoint: str
+    ICAO: Optional[str] = None
+    clouds: Optional[str] = None
+    dewPoint: Optional[str] = None
     cloudsCode: Optional[str] = None
     datetime: datetime
-    temperature: str
+    temperature: Optional[str] = None
     humidity: Optional[int] = None
     stationName: str
-    weatherCondition: str
-    windSpeed: str
+    weatherCondition: Optional[str] = None
+    windSpeed: Optional[str] = None
     lat: float
 
 

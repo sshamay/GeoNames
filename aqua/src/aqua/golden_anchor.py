@@ -50,7 +50,10 @@ def run_golden_anchor_case(ai_assistant, evaluators_class, run_ledger, case):
 
     # A case may declare simulated_output, the reply the assistant is assumed
     # to have produced (e.g. a hallucination-demo case fabricates a number so
-    # the hallucination gate proves it is detected).
+    # the hallucination gate proves it is detected). Only this reply string is
+    # overridden: trace_logs still come from the real agent run above, so the
+    # hallucination gate compares the (simulated) reply's numbers against the
+    # actually-fetched data.
     if case.get("simulated_output"):
         ai_output = case["simulated_output"]
 

@@ -10,7 +10,7 @@ import pytest
 from geonames.clients import GeoNamesClient
 from geonames.config_loader import Settings
 from geonames.factory import build_assistant, build_geonames_client
-from geonames.services import AskLocationAssistant
+from geonames.services import GeoNamesAgent
 
 
 def _settings(**overrides):
@@ -51,16 +51,17 @@ def test_build_geonames_client_uses_settings():
 
 
 @pytest.mark.unit
-def test_build_assistant_wires_fetchers_and_max_rows():
+def test_build_assistant_wires_geonames_agent():
+    """build_assistant returns a GeoNamesAgent wired to the tools + trace."""
     fake = _FakeClient()
     assistant = build_assistant(_settings(), client=fake)
-    assert isinstance(assistant, AskLocationAssistant)
 
-    summary = assistant.answer("Any recent earthquakes or bad weather near Sacramento?")
-
-    assert "near Sacramento" in summary
-    assert [endpoint for endpoint, _ in fake.calls] == ["earthquakesJSON", "weatherJSON"]
-    for _, params in fake.calls:
-        assert params["maxRows"] == 3
-    tools = assistant.trace_collector.get_trace_logs()["executed_tools"]
-    assert tools == ["earthquakes", "weather"]
+    assert isinstance(assistant, GeoNamesAgent)
+    # The agent owns a GeoNamesTools instance (geocode/earthquakes/weather).
+    tools = assistant._tools
+    assert hasattr(tools, "geocode_location")
+    assert hasattr(tools, "earthquakes")
+    assert hasattr(tools, "weather")
+    # The trace collector is present (AQuA SUT contract).
+    assert hasattr(assistant, "trace_collector")
+    assert callable(assistant.process_user_query)

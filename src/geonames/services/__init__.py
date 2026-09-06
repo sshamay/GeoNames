@@ -1,5 +1,6 @@
 """Workflows that orchestrate clients into business operations."""
 
+from geonames.services.agent import GeoNamesAgent
 from geonames.services.ask_location import (
     AskLocationAssistant,
     bbox_from_center,
@@ -13,9 +14,12 @@ from geonames.services.intent import (
     UnknownIntentError,
     UnknownLocationError,
 )
+from geonames.services.search import SearchAPI
+from geonames.services.tools import GeoNamesTools, build_tools
 from geonames.services.weather import WeatherAPI
 
 __all__ = [
+    "GeoNamesAgent",
     "AskLocationAssistant",
     "bbox_from_center",
     "BaseAPI",
@@ -26,5 +30,8 @@ __all__ = [
     "QuestionParser",
     "UnknownIntentError",
     "UnknownLocationError",
+    "SearchAPI",
+    "GeoNamesTools",
+    "build_tools",
     "WeatherAPI",
 ]

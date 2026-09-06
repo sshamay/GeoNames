@@ -37,12 +37,14 @@ THRESHOLDS = Thresholds(
 # 3. LLM-as-a-judge
 # ---------------------------------------------------------------------------
 # Local Ollama judge: fully offline, fast, no data leaves the machine. Requires
-# `ollama serve` running with the model pulled (`ollama pull llama3.2:3b`).
+# `ollama serve` running with the model pulled (`ollama pull qwen2.5:7b`).
+# qwen2.5:7b is used over the lighter llama3.2:3b because grounding verdicts
+# from 3b were unreliable (scored grounded, correct replies at 0.00).
 # Each field maps 1:1 to an AQUA_JUDGE_* env var as a fallback.
 JUDGE = JudgeConfig(
     enabled=True,          # set False to keep the suite offline/deterministic
     provider="ollama",     # openai_compatible | openai | aihorde | ollama
-    model="llama3.2:3b",   # required; no sane default model exists
+    model="qwen2.5:7b",    # required; no sane default model exists
     base_url=None,         # None = provider default (http://localhost:11434/v1)
     api_key=None,          # None = provider default ("ollama")
     timeout=60.0,

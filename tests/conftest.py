@@ -68,18 +68,18 @@ def weather_api(client: GeoNamesClient) -> WeatherAPI:
 
 @pytest.fixture(scope="session")
 def assistant_class():
-    """PROJECT-SPECIFIC: the GeoNames AskLocationAssistant class."""
-    from geonames.services.ask_location import AskLocationAssistant
+    """PROJECT-SPECIFIC: the GeoNames agent class."""
+    from geonames.services.agent import GeoNamesAgent
 
-    return AskLocationAssistant
+    return GeoNamesAgent
 
 
 @pytest.fixture
 def ai_assistant(assistant_class, settings):
-    """PROJECT-SPECIFIC: assistant with production wiring decided by Settings.
+    """PROJECT-SPECIFIC: the real GeoNames agent with production wiring.
 
     Uses build_assistant so the SUT owns its own composition (client, service
-    fetchers, max_rows) instead of the test assembling it. Exposes
+    fetchers, tools, LLM) instead of the test assembling it. Exposes
     ``process_user_query(input)`` and ``trace_collector.get_trace_logs()`` per
     the AQuA golden-anchor SUT contract.
     """

@@ -61,7 +61,7 @@ Every entry has the same schema:
 | `forbidden_tools` | `list[str]` | Tool names that must NOT be called |
 | `expected_outcome` | `str` | Golden reference answer used by the semantic / judge layers |
 | `threshold` | `float` | Semantic-similarity threshold (0..1) for `expected_outcome` |
-| `simulated_output` | `str` (optional) | Overrides the assistant reply (used for hallucination-demo cases) |
+| `simulated_output` | `str` (optional) | Overrides the assistant reply with a canned string so a case tests a specific behavior (e.g. a hallucination-demo injects a fabricated count). Only the reply is faked: `trace_logs` still come from the real agent run, so the hallucination gate can compare the fake reply's numbers against the actually-fetched data. Use it to exercise the evaluation machinery (hallucination gate, HITL path), not to test the agent's real behavior. |
 
 ### 2. Provide the SUT and adapter fixtures
 

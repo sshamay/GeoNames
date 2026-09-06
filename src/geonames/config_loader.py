@@ -19,6 +19,17 @@ class ConfigError(RuntimeError):
 
 
 @dataclass(frozen=True)
+class AgentConfig:
+    """LLM configuration for the GeoNames agent (ChatOllama / OpenAI-compatible)."""
+
+    model: str = "llama3.2:3b"
+    base_url: str = "http://localhost:11434"
+    temperature: float = 0.0
+    max_iterations: int = 5
+    max_rows: int = 5
+
+
+@dataclass(frozen=True)
 class Settings:
     """Typed view of the merged config for one environment."""
 
@@ -28,6 +39,8 @@ class Settings:
     geonames_base_url: str = "https://secure.geonames.org"
     geonames_timeout: float = 30.0
     assistant_max_rows: int = 5
+    agent: AgentConfig = AgentConfig()
+    default_location: Optional[str] = None
 
 
 def _default_config_path() -> Path:
@@ -67,6 +80,7 @@ def load_config(env: str = "dev", config_path: Optional[Path] = None) -> Setting
 
     env_overrides = envs[env] or {}
     merged: Dict[str, Any] = {**raw.get("defaults", {}), **env_overrides}
+    agent_raw = merged.get("agent", {}) or {}
     return Settings(
         app_name=merged.get("app_name", "geonames"),
         env=env,
@@ -74,4 +88,12 @@ def load_config(env: str = "dev", config_path: Optional[Path] = None) -> Setting
         geonames_base_url=merged.get("geonames_base_url", "https://secure.geonames.org"),
         geonames_timeout=merged.get("geonames_timeout", 30.0),
         assistant_max_rows=merged.get("assistant_max_rows", 5),
+        default_location=merged.get("default_location"),
+        agent=AgentConfig(
+            model=agent_raw.get("model", "llama3.2:3b"),
+            base_url=agent_raw.get("base_url", "http://localhost:11434"),
+            temperature=float(agent_raw.get("temperature", 0.0)),
+            max_iterations=int(agent_raw.get("max_iterations", 5)),
+            max_rows=int(agent_raw.get("max_rows", 5)),
+        ),
     )

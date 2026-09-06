@@ -7,8 +7,17 @@ defaults:
   geonames_timeout: 30
   # max_rows per service call made by the assistant's fetchers
   assistant_max_rows: 5
+  # Place the assistant resolves "near me"/"my location"/"here" to.
+  default_location: Sacramento
   # Copy your username (from geonames.org) into config.yaml - never commit it here.
   geonames_username: ""
+  # Agent LLM settings (LangChain ChatOllama over a local Ollama server).
+  agent:
+    model: llama3.2:3b
+    base_url: http://localhost:11434
+    temperature: 0.0
+    max_iterations: 5
+    max_rows: 5
   # AQuA evaluation settings (judge, thresholds, hallucination definition) are
   # NOT here: they live in ONE place, the project-root aqua_config.py. Copy
   # aqua/src/aqua/aqua_config.example.py -> aqua_config.py and edit it directly.
