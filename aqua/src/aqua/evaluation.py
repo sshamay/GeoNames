@@ -1,5 +1,7 @@
+import hashlib
 import json
 import math
+import re
 from collections import Counter
 
 try:
@@ -99,6 +101,44 @@ def _extract_content(ai_output):
     return ai_output
 
 
+_WORD_RE = re.compile(r"[a-z0-9']+")
+_EMBED_DIM = 512
+# Small built-in English stopword set so content words dominate the semantic
+# vector (e.g. "no earthquakes near Denver" and "no recent earthquakes near
+# Denver" both surface the content words earthquakes/near/denver). Kept minimal
+# so the framework stays shippable and fully dependency-free.
+_STOPWORDS = frozenset(
+    {
+        "a", "an", "the", "and", "or", "but", "of", "to", "in", "on", "at",
+        "for", "with", "from", "by", "is", "are", "was", "were", "be", "been",
+        "it", "its", "this", "that", "these", "those", "there", "here", "i",
+        "you", "he", "she", "we", "they", "my", "your", "our", "their", "as",
+        "so", "if", "then", "than", "not", "no", "any", "all", "some", "had",
+        "have", "has", "do", "does", "did", "will", "would", "can", "could",
+        "should", "about", "around", "also", "just", "very", "recent",
+        "today", "yesterday",
+    }
+)
+
+
+def _word_vector(text, dim=_EMBED_DIM):
+    """Dependency-free word-level hashing embedder (stdlib only).
+
+    Tokenizes to lowercased words, drops stopwords, and hashes each token into
+    one of ``dim`` dimensions so the vector is fixed-size and comparable across
+    any vocabulary despite there being no embedding model or API. Repeated
+    tokens accumulate weight; the result is a sparse Counter whose cosine can
+    be computed directly.
+    """
+    vec = Counter()
+    for word in _WORD_RE.findall((text or "").lower()):
+        if word in _STOPWORDS or len(word) < 3:
+            continue
+        idx = int(hashlib.md5(word.encode("utf-8")).hexdigest(), 16) % dim
+        vec[idx] += 1
+    return vec
+
+
 def _char_ngrams(text, n=3):
     """Dependency-free embedding fallback: character n-gram term counts."""
     normalized = " ".join(text.lower().split())
@@ -109,11 +149,15 @@ def _char_ngrams(text, n=3):
 
 def _embed(text):
     """
-    Pluggable embedder. Swap in a real embedding provider here when available
-    (e.g. sentence-transformers, fastembed, or an embeddings API). Falls back
-    to character n-gram vectors so the framework stays portable and offline.
+    Semantic embedder used by the P5 cosine layer.
+
+    Ships with AQuA: requires no external dependency, no API key, and no local
+    model, so it works whether or not Ollama (or any network) is available.
+    It uses word-level feature hashing over a small built-in stopword set, which
+    captures word overlap across paraphrases far better than the char n-gram
+    fallback (still available via ``_char_ngrams``).
     """
-    return _char_ngrams(text)
+    return _word_vector(text)
 
 
 def _cosine(vec_a, vec_b):
@@ -128,7 +172,12 @@ def _cosine(vec_a, vec_b):
 
 
 def _call_matches_params(call, required):
-    """True when a recorded call matches a required tool's name and declared parameters."""
+    """True when a recorded call matches a required tool's name and declared parameters.
+
+    A declared parameter value of exactly ``"__ANY__"`` is a sentinel meaning
+    "the key must be present in the recorded call with any non-empty value"
+    (used for fields like a runtime date whose exact value is not pinned).
+    """
     if call.get("name") != required["name"]:
         return False
     required_params = required.get("parameters")
@@ -137,7 +186,13 @@ def _call_matches_params(call, required):
     actual_params = call.get("parameters") or {}
     if not actual_params:
         return False
-    return all(actual_params.get(key) == value for key, value in required_params.items())
+    for key, value in required_params.items():
+        if value == "__ANY__":
+            if not actual_params.get(key):
+                return False
+        elif actual_params.get(key) != value:
+            return False
+    return True
 
 
 def required_tool_executed(required, executed_tools, tool_calls):
