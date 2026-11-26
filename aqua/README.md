@@ -267,10 +267,34 @@ aqua/
 └── tests/                    # framework's own unit tests
 ```
 
-## Running the framework's own tests
+## Scaling to Multiple Agents
 
-```bash
-pip install -e "./aqua[dev]"
-pytest aqua/tests -m unit
+`aqua` is architected to support complex, multi-agent ecosystems without any changes to the core framework. It leverages `pytest`'s built-in dependency injection to run evaluation suites across multiple agent implementations.
+
+Instead of writing separate tests for each agent, you can parameterize the `ai_assistant` fixture in your host project's `conftest.py`.
+
+### Example: Injecting Multiple Agents
+
+If your project has a `WeatherAgent` and a `FinanceAgent`, you can bridge them into `aqua` like this:
+
+```python
+# In your host project's tests/conftest.py
+import pytest
+from my_project.agents import WeatherAgent, FinanceAgent
+
+@pytest.fixture(params=["weather", "finance"])
+def ai_assistant(request):
+    """
+    The 'Contract' Bridge:
+    Maps pytest parameters to your specific agent instances.
+    """
+    if request.param == "weather":
+        return WeatherAgent()
+    elif request.param == "finance":
+        return FinanceAgent()
+    raise ValueError(f"Unsupported agent: {request.param}")
 ```
+
+When you run `pytest`, `aqua` will automatically execute your entire golden-anchor suite once for the Weather Agent and once for the Finance Agent, providing separate, clear pass/fail reports for each.
+
 
