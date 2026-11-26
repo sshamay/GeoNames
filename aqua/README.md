@@ -10,19 +10,30 @@ any project. No host-project code or config leaks into the framework.
 
 ## Installation
 
-The simplest way to use AQuA in your project — copy the `aqua/` directory
-alongside your repo and install it in editable mode:
+The most professional and easiest way to use `aqua` in your project is to install it directly from the repository using `pip`. This ensures that `aqua` is treated as a proper library and manages all its own dependencies.
 
-```sh
-# Copy the framework into your project
-cp -r /path/to/aqua ./aqua
+### 1. The "Pro" Way (Recommended)
+Install `aqua` directly from the GitHub repository:
 
-# Install in editable mode (no build step, edits take effect immediately)
-pip install -e ./aqua
+```bash
+# Install aqua from the GeoNames repo as a subdirectory
+pip install git+https://github.com/sshamay/GeoNames.git#subdirectory=aqua
 ```
 
-That's it. The pytest plugin auto-registers, the `aqua` CLI becomes available,
-and your golden-anchor tests just work.
+This method is preferred because it:
+* Automatically installs all required dependencies.
+* Keeps your project structure clean (no extra folders to manage).
+* Allows you to update the framework easily with a single command: `pip install --upgrade git+https://github.com/sshamay/GeoNames.git#subdirectory=aqua`
+
+### 2. The "Developer" Way
+If you are contributing to `aqua` itself or want to run its internal test suite, install it in editable mode:
+
+```bash
+# Clone the repo and install the aqua subdirectory
+git clone https://github.com/sshamay/GeoNames.git
+cd GeoNames/aqua
+pip install -e .
+```
 
 Other options:
 
